@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Pessoa - Minha Linhagem</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        /* Estilo customizado para o botão de escolher arquivo */
+        .custom-file-upload input[type="file"] {
+            display: none;
+        }
+
+        .custom-file-upload label {
+            background-color: #198754; /* Cor verde do Bootstrap success */
+            color: white;
+            padding: .375rem .75rem;
+            border-radius: .25rem;
+            cursor: pointer;
+            border: 1px solid #198754;
+            transition: background-color .15s ease-in-out, border-color .15s ease-in-out;
+            display: inline-block;
+        }
+
+        .custom-file-upload label:hover {
+            background-color: #157347;
+            border-color: #146c43;
+        }
+
+        .file-name-display {
+            margin-left: 10px;
+            font-size: 0.9em;
+            color: #6c757d;
+            vertical-align: middle;
+        }
+
+        /* Estilos para o Card de Preview */
+        .preview-card {
+            /* Removendo a borda vermelha inicial aqui */
+            border: 2px solid #ccc; /* Borda cinza suave padrão */
+            border-radius: .25rem;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+            background-color: #fff;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: border-color 0.3s ease-in-out; /* Transição suave para a borda */
+        }
+
+        /* Classe para adicionar a borda vermelha quando tiver conteúdo */
+        .preview-card.has-content {
+            border-color: #dc3545; /* Borda vermelha para destaque */
+        }
+
+        .preview-card h5 {
+            /* Removendo a cor vermelha inicial aqui */
+            color: #343a40; /* Cor de texto padrão */
+            margin-bottom: 5px;
+        }
+        .preview-card.has-content h5 {
+            color: #dc3545; /* Nome em vermelho quando tem conteúdo */
+        }
+
+        .preview-card p {
+            /* Removendo a cor vermelha inicial aqui */
+            color: #6c757d; /* Cor de texto padrão */
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .preview-card.has-content p {
+            color: #dc3545; /* Data/Idade em vermelho quando tem conteúdo */
+        }
+        .preview-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            /* Removendo a borda vermelha inicial aqui */
+            border: 2px solid #ccc; /* Borda cinza suave padrão */
+            margin-bottom: 10px;
+            transition: border-color 0.3s ease-in-out; /* Transição suave para a borda da foto */
+        }
+        .preview-card.has-content img {
+            border-color: #dc3545; /* Foto com borda vermelha quando tem conteúdo */
+        }
+        .placeholder-image {
+            background-color: #f0f0f0;
+            display: inline-flex; /* Para centralizar o texto */
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="card shadow p-3" style="width: 100%; max-width: 600px;">
+            <div class="card-body">
+                <h1 class="card-title text-center mb-3">Adicionar Nova Pessoa</h1>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-2">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            
+                            {% if field.name == 'historia_pessoal' %}
+                                <textarea class="form-control {% if field.errors %}is-invalid{% endif %}" name="{{ field.name }}" id="{{ field.id_for_label }}" rows="5">{{ field.value|default:'' }}</textarea>
+                            {% elif field.field.widget.input_type == 'file' %}
+                                {# Campo de Foto: Personaliza o botão e mostra o nome do arquivo #}
+                                <div class="custom-file-upload">
+                                    <label for="{{ field.id_for_label }}">Escolher arquivo</label>
+                                    <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control-file {% if field.errors %}is-invalid{% endif %}" accept="image/*">
+                                    <span id="file-name-{{ field.id_for_label }}" class="file-name-display">
+                                        {% if field.value %}{{ field.value.name }}{% else %}Nenhum arquivo escolhido{% endif %}
+                                    </span>
+                                </div>
+                            {% else %}
+                                {# Outros campos: renderização padrão com Bootstrap #}
+                                {{ field.as_widget }} 
+                            {% endif %}
+
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    {# ==== Área de Preview ==== #}
+                    <hr class="my-4">
+                    <h4 class="text-center mb-3">Pré-visualização na Árvore</h4>
+                    <div id="previewCard" class="preview-card">
+                        <img id="preview-foto" src="https://via.placeholder.com/100?text=Foto" alt="Prévia da Foto" class="preview-card-img">
+                        <h5 id="preview-nome">Nome da Pessoa</h5>
+                        <p id="preview-idade">Data Nasc.: --/--/---- (Idade: N/A)</p>
+                    </div>
+                    {# ======================= #}
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <button type="submit" class="btn btn-success me-md-2">Salvar</button>
+                        <a href="{% url 'lista_pessoas' %}" class="btn btn-secondary">Voltar para a lista</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        // Funções para calcular idade
+        function calculateAge(dob) {
+            const birthDate = new Date(dob);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        // Função para formatar a data para dd/mm/aaaa
+        function format_date(dateString) {
+            if (!dateString) return '--/--/----';
+            const date = new Date(dateString + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso horário
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Mês é 0-indexed
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        // Referências aos elementos do formulário
+        const nomeInput = document.getElementById('id_nome');
+        const dataNascimentoInput = document.getElementById('id_data_nascimento');
+        const fotoInput = document.getElementById('id_foto');
+
+        // Referências aos elementos de preview
+        const previewCard = document.getElementById('previewCard'); // O card inteiro de preview
+        const previewNome = document.getElementById('preview-nome');
+        const previewIdade = document.getElementById('preview-idade');
+        const previewFoto = document.getElementById('preview-foto');
+        const fileNameDisplay = document.getElementById('file-name-id_foto'); // Use o ID correto do span
+
+        // Função para verificar se o preview tem conteúdo
+        function hasPreviewContent() {
+            return (nomeInput && nomeInput.value.trim() !== '') || 
+                   (dataNascimentoInput && dataNascimentoInput.value.trim() !== '') || 
+                   (fotoInput && fotoInput.files && fotoInput.files.length > 0) ||
+                   (previewFoto.src !== 'https://via.placeholder.com/100?text=Foto' && !previewFoto.classList.contains('placeholder-image'));
+        }
+
+        // Função para atualizar o preview
+        function updatePreview() {
+            // Atualiza Nome
+            previewNome.textContent = (nomeInput && nomeInput.value) ? nomeInput.value : 'Nome da Pessoa';
+
+            // Atualiza Data de Nascimento / Idade
+            const dobValue = (dataNascimentoInput && dataNascimentoInput.value) ? dataNascimentoInput.value : null;
+            if (dobValue) {
+                const formattedDate = format_date(dobValue);
+                const age = calculateAge(dobValue);
+                previewIdade.textContent = `Nasc.: ${formattedDate} (Idade: ${age})`;
+            } else {
+                previewIdade.textContent = 'Data Nasc.: --/--/---- (Idade: N/A)';
+            }
+
+            // Gerencia a classe 'has-content' para o preview-card
+            if (hasPreviewContent()) {
+                previewCard.classList.add('has-content');
+            } else {
+                previewCard.classList.remove('has-content');
+            }
+        }
+
+        // Event Listeners para atualizar o preview em tempo real
+        if (nomeInput) nomeInput.addEventListener('input', updatePreview);
+        if (dataNascimentoInput) dataNascimentoInput.addEventListener('change', updatePreview); // 'change' para inputs de data
+
+        // Listener para o preview da foto
+        if (fotoInput) { // Verifica se o input da foto existe
+            fotoInput.addEventListener('change', function() {
+                const file = this.files && this.files.length > 0 ? this.files[0] : null;
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewFoto.src = e.target.result;
+                        previewFoto.classList.remove('placeholder-image'); // Remove a classe de placeholder se tiver
+                    }
+                    reader.readAsDataURL(file);
+                    fileNameDisplay.textContent = file.name; // Atualiza o nome do arquivo
+                } else {
+                    previewFoto.src = 'https://via.placeholder.com/100?text=Foto'; // Volta para o placeholder
+                    previewFoto.classList.add('placeholder-image'); // Adiciona a classe de placeholder
+                    fileNameDisplay.textContent = 'Nenhum arquivo escolhido'; // Atualiza o nome do arquivo
+                }
+                updatePreview(); // Chamar updatePreview para gerenciar a classe has-content
+            });
+
+            // Lógica para carregar foto existente ao carregar a página (se estiver editando)
+            // Certifique-se que form.foto.value.url está disponível no template se estiver em modo de edição
+            document.addEventListener('DOMContentLoaded', function() {
+                const initialPhotoUrl = "{% if form.foto.value %}{{ form.foto.value.url }}{% else %}https://via.placeholder.com/100?text=Foto{% endif %}";
+                previewFoto.src = initialPhotoUrl;
+                if (initialPhotoUrl !== 'https://via.placeholder.com/100?text=Foto') {
+                    previewFoto.classList.remove('placeholder-image');
+                } else {
+                    previewFoto.classList.add('placeholder-image');
+                }
+                updatePreview(); // Chamar para preencher nome e data e gerenciar a classe has-content
+            });
+        } else {
+            // Se o campo de foto não existir (e.g., em testes ou formulários parciais), ainda mostra o placeholder
+            document.addEventListener('DOMContentLoaded', function() {
+                previewFoto.src = 'https://via.placeholder.com/100?text=Foto';
+                previewFoto.classList.add('placeholder-image');
+                updatePreview(); // Chamar para preencher nome e data e gerenciar a classe has-content
+            });
+        }
+    </script>
+</body>
+</html>

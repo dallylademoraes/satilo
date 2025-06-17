@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Minha Árvore Genealógica</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <style>
+        body { /* Adicionar para garantir que o body não atrapalhe o min-vh-100 */
+            margin: 0;
+            padding: 0;
+        }
+
+        .tree-container {
+            overflow-x: auto; 
+            padding: 20px;
+            font-family: sans-serif;
+            background-color: #f8f9fa;
+            display: flex; 
+            flex-direction: column; /* Empilha os níveis verticalmente */
+            align-items: center; 
+            min-height: calc(100vh - 100px); 
+            width: 100%; /* Garante que o container da árvore ocupe largura total para centralização */
+        }
+        
+        /* Estilos para um nó de pessoa individual (person-card) */
+        .person-card { 
+            border: 1px solid #ccc;
+            padding: 10px;
+            /* Remover margin: 5px aqui, o gap do flex container vai cuidar */
+            margin: 0; 
+            border-radius: 5px;
+            background-color: #fff;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,.1);
+            min-width: 120px;
+            max-width: 150px;
+            /* Flex properties directly on card if it's a flex item */
+            flex-shrink: 0; 
+            flex-grow: 0; /* Não crescer */
+            display: flex; 
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center; /* Centraliza conteúdo dentro do card */
+            position: relative; /* Para linhas de conexão internas */
+        }
+        .person-card.is-root-node { 
+            background-color: #0d6efd; 
+            color: white;
+            border-color: #0a58ca;
+        }
+        .person-card.is-root-node .details {
+            color: #dee2e6;
+        }
+        .person-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 5px;
+            border: 2px solid #ddd;
+        }
+        .person-card .name {
+            font-weight: bold;
+            font-size: 1em;
+            word-break: break-word; 
+        }
+        .person-card .details {
+            font-size: 0.75em;
+            color: #555;
+        }
+
+        /* Estrutura por Níveis/Gerações */
+        .tree-level { /* Contém todas as pessoas de uma geração */
+            display: flex;
+            flex-direction: row; /* Alinha pessoas da mesma geração LADO A LADO */
+            justify-content: center;
+            gap: 20px; /* Espaçamento entre os cartões */
+            flex-wrap: wrap; /* Quebra de linha se muitos cards */
+            margin-bottom: 40px; /* Espaço entre as gerações */
+            position: relative;
+            width: auto; /* Deixa o flex item determinar a largura */
+            padding-top: 40px; /* Espaço para linhas de conexão da geração superior */
+            border: 1px dashed red; /* DEBUG: Ver o limite do tree-level */
+        }
+        
+        .tree-level:first-child {
+            padding-top: 0; /* Primeira geração não tem linha vindo de cima */
+        }
+
+        /* Linhas de Conexão (simplificadas para layout por níveis) */
+        /* Linha vertical que desce da geração superior para a linha horizontal desta geração */
+        .tree-level::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px; /* Metade da linha vertical para conectar níveis */
+            background-color: #888;
+        }
+        .tree-level:first-child::before {
+            content: none; /* Não tem linha vindo de cima para a primeira geração */
+        }
+
+        /* Linha horizontal para conectar pessoas dentro da mesma geração (irá do meio da linha vertical até cada pessoa) */
+        /* Esta linha será feita com pseudo-elementos em cada person-card */
+        
+        /* Linha vertical para cada person-card na geração (conectando à linha horizontal da geração) */
+        .tree-level .person-card::before { /* Linha vertical acima do card */
+            content: '';
+            position: absolute;
+            top: -20px; /* Sobe 20px do topo do card */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px; /* Conecta à linha horizontal da geração */
+            background-color: #888;
+            z-index: 1;
+        }
+        
+        /* Oculta a linha vertical do card se ele for o único ou se não houver linha horizontal da geração */
+        /* Ajuste: a linha horizontal da geração já é o :before do tree-level.
+           Esta linha vertical é dos membros para essa linha horizontal. */
+        .tree-level:only-child .person-card::before { /* Se só há um card no nível, não há linha horizontal para se conectar */
+            content: none;
+        }
+
+        /* Linha horizontal que conecta os cartões de uma geração (pseudo-elemento do tree-level) */
+        .tree-level::after {
+            content: '';
+            position: absolute;
+            top: 20px; /* Altura da linha horizontal da geração */
+            left: 0;
+            right: 0;
+            height: 2px; /* Espessura da linha */
+            background-color: #888;
+            z-index: 0;
+            /* Ajustar largura da linha horizontal entre os cartões */
+            /* Isso é complexo. Pode precisar de JS ou outra estrutura. */
+        }
+        .tree-level:first-child::after {
+            content: none; /* A primeira geração não tem linha horizontal superior para se conectar */
+        }
+        
+        /* Ajuste para o botão Voltar */
+        .back-button-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .modal-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Árvore Genealógica</h1>
+        {% load custom_filters %} 
+
+        {% if message %}
+            <div class="alert alert-warning">{{ message }}</div>
+        {% elif tree_levels %} {# Usamos tree_levels agora para renderizar por níveis #}
+            <p>DEBUG (arvore_simples): tree_levels existe? {{ tree_levels|length }} (Tipo: {{ tree_levels|class_name }})</p>
+            <p>DEBUG (arvore_simples): all_tree_data.persons existe? {{ all_tree_data.persons|length }} (Tipo: {{ all_tree_data.persons|class_name }})</p>
+            <p>DEBUG (arvore_simples): all_tree_data.families existe? {{ all_tree_data.families|length }} (Tipo: {{ all_tree_data.families|class_name }})</p>
+
+            <div class="tree-container">
+                {% for level_data in tree_levels %}
+                    <p>DEBUG (arvore_simples): Renderizando Nível {{ level_data.level }}. Nós: {{ level_data.nodes|length }}</p>
+                    <div class="tree-level">
+                        {% for person_data in level_data.nodes %}
+                            <p>DEBUG (arvore_simples): Incluindo Person Card para {{ person_data.nome }} (ID: {{ person_data.id }})</p>
+                            {% include 'pessoas/_person_card.html' with person_data=person_data all_nodes_map=all_tree_data.persons %}
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning">Nenhuma pessoa para exibir a árvore.</div>
+        {% endif %}
+        <div class="back-button-container">
+            <a href="{% url 'lista_pessoas' %}" class="btn btn-secondary">Voltar para a lista</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

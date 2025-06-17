@@ -1,0 +1,42 @@
+{# satilo/templates/pessoas/_render_tree_recursive.html #}
+{# Este template renderiza uma FamilyUnit (casal e filhos) e recursivamente seus descendentes #}
+{# Recebe 'family_unit_data' e 'all_nodes_map' #}
+{% load custom_filters %}
+
+<div class="family-generation-line">
+    <div class="family-unit-display">
+        {# Linha dos Pais (o casal desta FamilyUnit) #}
+        <div class="family-unit-parents {% if not family_unit_data.husband or not family_unit_data.wife %}single-parent{% endif %}">
+            {% if family_unit_data.husband %}
+                {% include 'pessoas/_person_card.html' with person_data=family_unit_data.husband %}
+            {% endif %}
+            {% if family_unit_data.wife %}
+                {% include 'pessoas/_person_card.html' with person_data=family_unit_data.wife %}
+            {% endif %}
+        </div>
+
+        {# Linha dos Filhos (os irmãos desta FamilyUnit) #}
+        {% if family_unit_data.children %}
+            <div class="family-unit-children">
+                {% for child_data in family_unit_data.children %}
+                    {# Cada filho será a raiz da próxima geração (se tiver mais filhos) #}
+                    {% comment %}
+                    Aqui está a parte crucial: Se o filho tem suas próprias child_family_units,
+                    precisamos chamá-las recursivamente. Senão, só renderizamos o cartão do filho.
+                    {% endcomment %}
+                    {% if child_data.child_family_unit_ids %}
+                        {% for child_family_id in child_data.child_family_unit_ids %}
+                            {% with next_family_unit_data=all_nodes_map.families|get_item:child_family_id %}
+                                {# RECURSÃO: Renderiza a próxima FamilyUnit na geração abaixo #}
+                                {% include 'pessoas/_render_tree_recursive.html' with family_unit_data=next_family_unit_data all_nodes_map=all_nodes_map %}
+                            {% endwith %}
+                        {% endfor %}
+                    {% else %}
+                        {# Se o filho não tem FamilyUnits de filhos, apenas renderiza o cartão da pessoa #}
+                        {% include 'pessoas/_person_card.html' with person_data=child_data %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>

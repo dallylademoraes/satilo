@@ -1,0 +1,43 @@
+{# satilo/templates/pessoas/_person_node_recursive.html #}
+{# Recebe 'person_data' para o nó atual, e 'all_nodes_map' para acessar outros nós #}
+{% load custom_filters %} 
+
+<div class="tree-level-node"> {# Contêiner para o nó da pessoa e seus descendentes #}
+    {# Renderiza os pais acima, se existirem #}
+    {% if person_data.pai or person_data.mae %}
+        <div class="parents-line {% if not person_data.pai or not person_data.mae %}single-parent{% endif %}">
+            {% if person_data.pai %}
+                {% include 'pessoas/_person_card.html' with person_data=person_data.pai %}
+            {% endif %}
+            {% if person_data.mae %}
+                {% include 'pessoas/_person_card.html' with person_data=person_data.mae %}
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {# Linha horizontal de conexão do casal (se houver) para seus filhos #}
+    {% if person_data.pai and person_data.mae %}
+        <div class="couple-to-children-line"></div>
+    {% elif person_data.pai or person_data.mae %}
+        <div class="single-parent-to-children-line"></div>
+    {% endif %}
+
+    {# O próprio nó da pessoa atual #}
+    {% include 'pessoas/_person_card.html' with person_data=person_data is_root_node=person_data.is_root_display %}
+
+    {# Linha horizontal dos irmãos (filhos do mesmo casal) #}
+    {% comment %}
+    A lógica de irmãos lado a lado é melhor tratada se a pessoa atual é um dos filhos de um casal.
+    Vamos fazer essa lógica no _person_card.html (se for necessário)
+    {% endcomment %}
+
+    {# Renderiza os filhos recursivamente abaixo #}
+    {% if person_data.filhos %}
+        <div class="children-line">
+            {% for filho_data in person_data.filhos %}
+                {# Recursão para cada filho #}
+                {% include 'pessoas/_tree_node_recursive.html' with person_data=filho_data %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>

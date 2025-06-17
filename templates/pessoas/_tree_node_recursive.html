@@ -1,0 +1,53 @@
+{# satilo/templates/pessoas/_tree_node_recursive.html #}
+{# Este template renderiza uma FamilyUnit (casal e filhos) e recursivamente seus descendentes #}
+{# Recebe 'family_unit_data', 'all_nodes_map' (para persons) e 'all_families_map' (para families) #}
+{% load custom_filters %} 
+
+<div class="family-generation-line"> {# Representa uma geração (grupo de pais e filhos) #}
+    <div class="family-unit-display">
+
+        {# ---- Linha dos Pais/Casal ---- #}
+        <div class="family-unit-parents {% if not family_unit_data.husband_id or not family_unit_data.wife_id %}single-parent{% endif %}">
+            {% comment %} Renderiza os pais da FamilyUnit atual. {% endcomment %}
+            {% if family_unit_data.husband_id %}
+                {% with person_data=all_nodes_map|get_item:family_unit_data.husband_id %}
+                    {% include 'pessoas/_person_card.html' with person_data=person_data all_nodes_map=all_nodes_map %}
+                {% endwith %}
+            {% endif %}
+            {% if family_unit_data.wife_id %}
+                {% with person_data=all_nodes_map|get_item:family_unit_data.wife_id %}
+                    {% include 'pessoas/_person_card.html' with person_data=person_data all_nodes_map=all_nodes_map %}
+                {% endwith %}
+            {% endif %}
+        </div>
+
+        {# ---- Linha dos Filhos (irmãos lado a lado) ---- #}
+        {% if family_unit_data.children_ids %}
+            <div class="children-line">
+                {% for child_id in family_unit_data.children_ids %}
+                    {% with child_data=all_nodes_map|get_item:child_id %}
+                        {# Cada filho é renderizado como um cartão, e sua própria FamilyUnit é chamada recursivamente abaixo dele #}
+                        <div class="child-subtree-wrapper"> {# Wrapper para o cartão do filho e a linha de conexão para a próxima geração #}
+                            {% include 'pessoas/_person_card.html' with person_data=child_data all_nodes_map=all_nodes_map %}
+                            
+                            {# Linha vertical que desce do filho para a família dele (se tiver filhos) #}
+                            {% if child_data.child_family_unit_ids %}
+                                <div class="next-generation-connector"></div> 
+                                {% comment %}
+                                A recursão para a próxima geração precisa vir de CADA FILHO que tiver descendentes.
+                                Vamos chamar _tree_node_recursive para a FamilyUnit principal do filho.
+                                {% endcomment %}
+                                {% with next_family_unit_id=child_data.child_family_unit_ids.0 %}
+                                    {% with next_family_unit_data=all_families_map|get_item:next_family_unit_id %}
+                                        {# RECURSÃO: Renderiza a próxima FamilyUnit na geração abaixo deste filho #}
+                                        {% include 'pessoas/_tree_node_recursive.html' with family_unit_data=next_family_unit_data all_nodes_map=all_nodes_map all_families_map=all_families_map %}
+                                    {% endwith %}
+                                {% endwith %}
+                            {% endif %}
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
