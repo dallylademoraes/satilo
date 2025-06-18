@@ -119,9 +119,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Diretórios onde o Django DEVE PROCURAR por arquivos estáticos *adicionais* durante o desenvolvimento.
+# Se seus arquivos estáticos estão APENAS dentro das pastas static/app_name/img/,
+# você não precisa da linha os.path.join(BASE_DIR, 'static').
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-    os.path.join(BASE_DIR, 'pessoas', 'static'), # Para a imagem sem-foto.jpg, por exemplo
+    # REMOVIDO: os.path.join(BASE_DIR, 'static'), # Causa o aviso se a pasta não existe
+    os.path.join(BASE_DIR, 'pessoas', 'static'), # Esta linha já cobre 'pessoas/static/...'
 ]
 
 # O DIRETÓRIO ABSOLUTO para onde o 'collectstatic' irá COPIAR todos os arquivos estáticos.
@@ -140,9 +142,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configurações de Autenticação (Login e Cadastro)
-# Redireciona para a home_page após login bem-sucedido
-LOGIN_REDIRECT_URL = 'home_page' 
-# Redireciona para a home_page após logout bem-sucedido
-LOGOUT_REDIRECT_URL = 'home_page' 
-# URL para a página de login (usado por @login_required decorators, por exemplo)
+LOGIN_REDIRECT_URL = 'home_page'
+LOGOUT_REDIRECT_URL = 'home_page'
 LOGIN_URL = 'login'
