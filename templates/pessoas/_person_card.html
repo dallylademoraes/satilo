@@ -1,88 +1,32 @@
 {# satilo/templates/pessoas/_person_card.html #}
 {# Recebe 'person_data' que é o dicionário de dados da pessoa #}
-{# 'is_root_node' é opcional para destacar o nó raiz da visualização #}
-{# all_nodes_map é passado para resolver IDs de pais/irmãos no modal #}
 {% load custom_filters %} 
 
-<p>DEBUG (_person_card): Renderizando {{ person_data.nome }} (ID: {{ person_data.id }}). all_nodes_map Tipo: {{ all_nodes_map|class_name }}</p>
-
-<div class="person-card {% if is_root_node %}is-root-node{% endif %}">
-    {% if person_data.foto_url %}
-        <img src="{{ person_data.foto_url }}" alt="{{ person_data.nome }}">
-    {% else %}
-        <img src="https://via.placeholder.com/80?text=Sem+Foto" alt="Sem Foto">
-    {% endif %}
-    <div class="name">{{ person_data.nome }} {% if person_data.is_user_selected %} <span class="badge bg-success">Você</span>{% endif %}</div>
-    <div class="details">
-        {% if person_data.data_nascimento %}Nasc.: {{ person_data.data_nascimento|date:"d/m/Y" }}<br>{% endif %}
-        Idade: {% if person_data.idade %}{{ person_data.idade }}{% else %}N/A{% endif %}<br>
-        Gênero: {{ person_data.genero }}<br>
-        Parentesco: <strong>{{ person_data.relacao }}</strong><br>
-        Status: {{ person_data.status_vida }}
-    </div>
-    <button class="btn btn-sm btn-info mt-2" data-bs-toggle="modal" data-bs-target="#personModal{{ person_data.id }}">Detalhes</button>
-</div>
-
-<div class="modal fade" id="personModal{{ person_data.id }}" tabindex="-1" aria-labelledby="personModalLabel{{ person_data.id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="personModalLabel{{ person_data.id }}">{{ person_data.nome }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-start">
-                <div class="text-center mb-3">
-                    <img src="{{ person_data.foto_url }}" alt="{{ person_data.nome }}" class="img-fluid" style="max-height: 200px;">
-                </div>
-                <p><strong>Nome:</strong> {{ person_data.nome }}</p>
-                <p><strong>Data de Nascimento:</strong> {% if person_data.data_nascimento %}{{ person_data.data_nascimento|date:"d/m/Y" }}{% else %}Não informado{% endif %}</p>
-                <p><strong>Idade:</strong> {% if person_data.idade %}{{ person_data.idade }}{% else %}N/A{% endif %}</p>
-                <p><strong>Data de Falecimento:</strong> {% if person_data.data_falecimento %}{{ person_data.data_falecimento|date:"d/m/Y" }}{% else %}Vivo(a){% endif %}</p>
-                <p><strong>Gênero:</strong> {{ person_data.genero }}</p>
-                
-                {# Acessa Pai e Mãe do mapa global para exibir no modal #}
-                <p><strong>Pai:</strong> 
-                    {% if person_data.pai_id %}
-                        {% with pai_data=all_nodes_map|get_item:person_data.pai_id %}
-                            {% if pai_data %}
-                                <a href="{% url 'arvore_genealogica' pai_data.id %}">{{ pai_data.nome }}</a>
-                            {% else %}
-                                ID do Pai: {{ person_data.pai_id }} (Dados não encontrados)
-                            {% endif %}
-                        {% endwith %}
-                    {% else %}Não informado{% endif %}
-                </p>
-                <p><strong>Mãe:</strong> 
-                    {% if person_data.mae_id %}
-                        {% with mae_data=all_nodes_map|get_item:person_data.mae_id %}
-                            {% if mae_data %}
-                                <a href="{% url 'arvore_genealogica' mae_data.id %}">{{ mae_data.nome }}</a>
-                            {% else %}
-                                ID da Mãe: {{ person_data.mae_id }} (Dados não encontrados)
-                            {% endif %}
-                        {% endwith %}
-                    {% else %}Não informado{% endif %}
-                </p>
-                
-                {% if person_data.relacao %}
-                <p><strong>Parentesco em relação a você:</strong> <strong>{{ person_data.relacao }}</strong></p>
-                {% endif %}
-                <p><strong>Status de Vida:</strong> {{ person_data.status_vida }}</p>
-                {% if person_data.historia_pessoal %}
-                <p><strong>História Pessoal:</strong></p>
-                <p>{{ person_data.historia_pessoal|linebreaksbr }}</p>
-                {% endif %}
-                
-                {% comment %}
-                Irmãos não são um campo direto, são inferidos pelos pais em comum.
-                Para exibir irmãos aqui de forma completa, seria preciso passar a lista de irmãos para o modal
-                ou fazer outra chamada de API/lógica complexa.
-                Por enquanto, focamos na hierarquia pai-filho.
-                {% endcomment %}
-            </div>
-            <div class="modal-footer">
-                <a href="{% url 'edita_pessoa' person_data.id %}" class="btn btn-warning">Editar</a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            </div>
+<div class="card person-card-inner-content h-100 border-0 {% if person_data.is_user_selected %}is-user-selected-card{% endif %}"> 
+    <div class="card-body d-flex flex-column align-items-center py-2 px-1">
+        {# A URL da foto já vem preparada da view (views.py -> _get_person_data), #}
+        {# contendo a foto da pessoa ou 'sem-foto.jpg' #}
+        <img src="{{ person_data.foto_url }}" alt="{{ person_data.nome }}" class="img-fluid rounded-circle mb-1" style="width: 70px; height: 70px; object-fit: cover; border: 3px solid #ddd;">
+        
+        <h5 class="card-title name text-center mb-0 flex-shrink-0" style="font-size: 0.9em; line-height: 1.1;">
+            {{ person_data.nome }} {% if person_data.is_user_selected %} <span class="badge bg-success" style="color: #212529 !important;">Você</span>{% endif %}
+        </h5>
+        
+        <div class="details text-muted text-center flex-grow-1 d-flex flex-column justify-content-center w-100" style="font-size: 0.65em; line-height: 1.05;">
+            {% if person_data.data_nascimento %}
+                <small class="text-nowrap d-block">Nasc.: {{ person_data.data_nascimento|date:"d/m/Y" }}</small>
+            {% endif %}
+            <small class="text-nowrap d-block">Idade: {% if person_data.idade %}{{ person_data.idade }}{% else %}N/A{% endif %}</small>
+            <small class="text-nowrap d-block">Gênero: {{ person_data.genero }}</small>
+            <small class="text-nowrap d-block">Parentesco: <strong>{{ person_data.relacao }}</strong></small>
+            <small class="text-nowrap d-block">Status: {{ person_data.status_vida }}</small>
+            {% if person_data.local_nascimento %}
+                <small class="text-nowrap d-block">Local Nasc.: {{ person_data.local_nascimento }}</small>
+            {% endif %}
         </div>
+        
+        <button class="btn btn-sm btn-info mt-auto" data-bs-toggle="modal" data-bs-target="#personDetailsModal" data-person-id="{{ person_data.id }}" style="font-size: 0.7em; padding: 0.2em 0.5em;">
+            Detalhes
+        </button>
     </div>
+</div>

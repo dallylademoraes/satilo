@@ -4,38 +4,109 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bem-vindo ao Satilo - Minha Linhagem</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
+        /* Banner */
         .hero-banner {
-            background-color: #f8f9fa; /* Cor de fundo suave */
+            background-color: #f8f9fa;
             padding: 80px 0;
             text-align: center;
             border-bottom: 1px solid #e9ecef;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: #fff;
+            background-image: url('{% load static %}{% static "pessoas/img/banner_placeholder.jpg" %}');
+            background-size: cover;
+            background-position: center;
         }
-        .hero-banner h1 {
-            font-size: 3.5rem;
-            color: #343a40;
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: 1;
         }
-        .hero-banner p {
-            font-size: 1.25rem;
-            color: #6c757d;
-            max-width: 700px;
-            margin: 0 auto 30px auto;
+        .hero-banner .container {
+            position: relative;
+            z-index: 2;
+        }
+        .hero-banner h1, .hero-banner p {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+
+        /* Homenagem ao avô Satilo */
+        .navbar-brand-container {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+        .tribute-text-wrapper {
+            overflow: hidden;
+            white-space: nowrap;
+            margin-left: 15px;
+            position: relative;
+            max-width: 400px;
+        }
+        .tribute-text-content {
+            display: inline-block;
+            font-size: 1rem;
+            color: #000000; /* Cor preta */
+            background-color: #f0f0f0; /* Fundo cinza claro */
+            padding: 4px 8px;
+            border-radius: 4px;
+            animation: scroll-left 15s linear infinite;
+        }
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        /* Oculta a homenagem em telas pequenas */
+        @media (max-width: 768px) {
+            .tribute-text-wrapper {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'home_page' %}">Satilo</a>
+            <div class="navbar-brand-container">
+                <a class="navbar-brand" href="{% url 'home_page' %}">Satilo</a>
+                <div class="tribute-text-wrapper">
+                    <span class="tribute-text-content">
+                        Em memória do meu querido avô, Alfredo Satilo Rodrigues de Moraes.
+                    </span>
+                </div>
+            </div>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'lista_pessoas' %}">Ver Minha Linhagem</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'cria_pessoa' %}">Adicionar Pessoa</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'lista_pessoas' %}">Ver Minha Linhagem</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'cria_pessoa' %}">Adicionar Pessoa</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'arvore_genealogica_default' %}">Ver Árvore</a></li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item"><span class="nav-link">Olá, {{ user.username }}!</span></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Sair</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Cadastro</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -54,7 +125,6 @@
         <p class="text-muted">Conecte-se com suas raízes, descubra histórias e preserve o legado da sua família para as futuras gerações.</p>
     </div>
 
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

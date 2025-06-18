@@ -11,149 +11,140 @@
       crossorigin="anonymous"
     />
     <style>
-        body { /* Adicionar para garantir que o body não atrapalhe o min-vh-100 */
+        body {
             margin: 0;
             padding: 0;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container.mt-4 {
+            padding: 20px;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #343a40;
         }
 
         .tree-container {
-            overflow-x: auto; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             padding: 20px;
-            font-family: sans-serif;
-            background-color: #f8f9fa;
-            display: flex; 
-            flex-direction: column; /* Empilha os níveis verticalmente */
-            align-items: center; 
-            min-height: calc(100vh - 100px); 
-            width: 100%; /* Garante que o container da árvore ocupe largura total para centralização */
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,.08);
+            overflow-x: auto;
+            min-width: fit-content;
+            margin: 0 auto;
+            width: 100%;
         }
         
-        /* Estilos para um nó de pessoa individual (person-card) */
-        .person-card { 
-            border: 1px solid #ccc;
-            padding: 10px;
-            /* Remover margin: 5px aqui, o gap do flex container vai cuidar */
-            margin: 0; 
-            border-radius: 5px;
-            background-color: #fff;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,.1);
-            min-width: 120px;
-            max-width: 150px;
-            /* Flex properties directly on card if it's a flex item */
-            flex-shrink: 0; 
-            flex-grow: 0; /* Não crescer */
-            display: flex; 
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center; /* Centraliza conteúdo dentro do card */
-            position: relative; /* Para linhas de conexão internas */
-        }
-        .person-card.is-root-node { 
-            background-color: #0d6efd; 
-            color: white;
-            border-color: #0a58ca;
-        }
-        .person-card.is-root-node .details {
-            color: #dee2e6;
-        }
-        .person-card img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 5px;
-            border: 2px solid #ddd;
-        }
-        .person-card .name {
-            font-weight: bold;
-            font-size: 1em;
-            word-break: break-word; 
-        }
-        .person-card .details {
-            font-size: 0.75em;
-            color: #555;
-        }
-
-        /* Estrutura por Níveis/Gerações */
-        .tree-level { /* Contém todas as pessoas de uma geração */
+        .tree-level {
             display: flex;
-            flex-direction: row; /* Alinha pessoas da mesma geração LADO A LADO */
+            flex-direction: row;
             justify-content: center;
-            gap: 20px; /* Espaçamento entre os cartões */
-            flex-wrap: wrap; /* Quebra de linha se muitos cards */
-            margin-bottom: 40px; /* Espaço entre as gerações */
+            align-items: flex-start;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-bottom: 80px;
             position: relative;
-            width: auto; /* Deixa o flex item determinar a largura */
-            padding-top: 40px; /* Espaço para linhas de conexão da geração superior */
-            border: 1px dashed red; /* DEBUG: Ver o limite do tree-level */
+            padding-top: 20px;
+            width: 100%;
         }
         
         .tree-level:first-child {
-            padding-top: 0; /* Primeira geração não tem linha vindo de cima */
+            padding-top: 0;
+            margin-top: 0;
         }
 
-        /* Linhas de Conexão (simplificadas para layout por níveis) */
-        /* Linha vertical que desce da geração superior para a linha horizontal desta geração */
-        .tree-level::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 20px; /* Metade da linha vertical para conectar níveis */
-            background-color: #888;
+        .person-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,.05);
+            width: 180px;
+            height: 200px;
+            position: relative;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
-        .tree-level:first-child::before {
-            content: none; /* Não tem linha vindo de cima para a primeira geração */
+        .person-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,.1);
+        }
+        .person-card.is-root-node {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0a58ca;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+        }
+        
+        .person-card.is-root-node {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0a58ca;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+        }
+        
+        .person-card.is-root-node .person-card-inner-content .person-img {
+            border-color: white !important;
         }
 
-        /* Linha horizontal para conectar pessoas dentro da mesma geração (irá do meio da linha vertical até cada pessoa) */
-        /* Esta linha será feita com pseudo-elementos em cada person-card */
-        
-        /* Linha vertical para cada person-card na geração (conectando à linha horizontal da geração) */
-        .tree-level .person-card::before { /* Linha vertical acima do card */
-            content: '';
-            position: absolute;
-            top: -20px; /* Sobe 20px do topo do card */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 20px; /* Conecta à linha horizontal da geração */
-            background-color: #888;
-            z-index: 1;
-        }
-        
-        /* Oculta a linha vertical do card se ele for o único ou se não houver linha horizontal da geração */
-        /* Ajuste: a linha horizontal da geração já é o :before do tree-level.
-           Esta linha vertical é dos membros para essa linha horizontal. */
-        .tree-level:only-child .person-card::before { /* Se só há um card no nível, não há linha horizontal para se conectar */
-            content: none;
+        .person-card:not(.is-root-node) .badge.bg-success {
+            background-color: #28a745 !important;
+            color: #212529 !important;
         }
 
-        /* Linha horizontal que conecta os cartões de uma geração (pseudo-elemento do tree-level) */
-        .tree-level::after {
-            content: '';
-            position: absolute;
-            top: 20px; /* Altura da linha horizontal da geração */
-            left: 0;
-            right: 0;
-            height: 2px; /* Espessura da linha */
-            background-color: #888;
-            z-index: 0;
-            /* Ajustar largura da linha horizontal entre os cartões */
-            /* Isso é complexo. Pode precisar de JS ou outra estrutura. */
+        .person-card.is-root-node .badge.bg-success {
+            background-color: #6c757d !important;
+            color: white !important;
         }
-        .tree-level:first-child::after {
-            content: none; /* A primeira geração não tem linha horizontal superior para se conectar */
+
+        .person-card .person-card-inner-content .name .badge.bg-success {
+            background-color: #28a745 !important;
+            color: #212529 !important;
+            border: 1px solid #79d799;
+        }
+
+        .person-card .person-card-inner-content.is-user-selected-card {
+            border: 2px solid #6cb2eb;
+            box-shadow: 0 0 10px rgba(108, 178, 235, 0.5);
+        }
+
+        .person-card:not(.is-root-node) .person-card-inner-content .card-title,
+        .person-card:not(.is-root-node) .person-card-inner-content .details small {
+            color: #343a40 !important;
         }
         
-        /* Ajuste para o botão Voltar */
+        /* --- Linhas de Conexão com CSS Puro --- */
+        .tree-level::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 20px; background-color: #888; z-index: 1; }
+        .tree-level:first-child::before { content: none; }
+
+        .tree-level::after { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 2px; background-color: #888; z-index: 1; }
+        .tree-level:first-child::after { content: none; }
+
+        .person-card::before { content: ''; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 2px; height: 20px; background-color: #888; z-index: 2; }
+        .tree-level:first-child .person-card::before { content: none; }
+
+        .tree-level:not(:last-child)::after { 
+            content: ''; position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); width: 2px; height: 60px; background-color: #888; z-index: 0; 
+        }
+        .tree-level:last-child::after { content: none; }
+
         .back-button-container {
             width: 100%;
             text-align: center;
-            margin-top: 20px;
+            margin-top: 40px;
+            margin-bottom: 20px;
         }
 
         .modal-body img {
@@ -168,20 +159,33 @@
         <h1 class="mb-4">Árvore Genealógica</h1>
         {% load custom_filters %} 
 
+        {# NOVO: Seção para exibir as origens regionais #}
+        {% if regioes_familiares %}
+        <div class="card p-3 mb-4 shadow-sm">
+            <h4 class="card-title text-center mb-3">Origens Regionais da Família</h4>
+            <div class="row justify-content-center">
+                {% for item in regioes_familiares %}
+                <div class="col-auto mb-2">
+                    <span class="badge bg-primary fs-6 py-2 px-3">
+                        {{ item.regiao }}: {{ item.count }} parentes
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         {% if message %}
             <div class="alert alert-warning">{{ message }}</div>
-        {% elif tree_levels %} {# Usamos tree_levels agora para renderizar por níveis #}
-            <p>DEBUG (arvore_simples): tree_levels existe? {{ tree_levels|length }} (Tipo: {{ tree_levels|class_name }})</p>
-            <p>DEBUG (arvore_simples): all_tree_data.persons existe? {{ all_tree_data.persons|length }} (Tipo: {{ all_tree_data.persons|class_name }})</p>
-            <p>DEBUG (arvore_simples): all_tree_data.families existe? {{ all_tree_data.families|length }} (Tipo: {{ all_tree_data.families|class_name }})</p>
-
+        {% elif tree_levels %} 
             <div class="tree-container">
                 {% for level_data in tree_levels %}
-                    <p>DEBUG (arvore_simples): Renderizando Nível {{ level_data.level }}. Nós: {{ level_data.nodes|length }}</p>
                     <div class="tree-level">
                         {% for person_data in level_data.nodes %}
-                            <p>DEBUG (arvore_simples): Incluindo Person Card para {{ person_data.nome }} (ID: {{ person_data.id }})</p>
-                            {% include 'pessoas/_person_card.html' with person_data=person_data all_nodes_map=all_tree_data.persons %}
+                            <div class="person-card {% if person_data.is_root_display_node %}is-root-node{% endif %}">
+                                {# Inclui o template do cartão da pessoa, sem o modal interno #}
+                                {% include 'pessoas/_person_card.html' with person_data=person_data %}
+                            </div>
                         {% endfor %}
                     </div>
                 {% endfor %}
@@ -194,6 +198,129 @@
         </div>
     </div>
 
+    {# O MODAL GENÉRICO: Apenas um modal no DOM #}
+    <div class="modal fade" id="personDetailsModal" tabindex="-1" aria-labelledby="personDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="personDetailsModalLabel">Detalhes da Pessoa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-start">
+                    <div class="text-center mb-3">
+                        <img id="modalPersonPhoto" src="" alt="" class="img-fluid rounded-circle" style="max-height: 200px; width: 150px; height: 150px; object-fit: cover; border: 4px solid #f0f0f0;">
+                    </div>
+                    <p><strong>Nome:</strong> <span id="modalPersonName"></span></p>
+                    <p><strong>Data de Nascimento:</strong> <span id="modalPersonBirthDate"></span></p>
+                    <p><strong>Idade:</strong> <span id="modalPersonAge"></span></p>
+                    <p><strong>Data de Falecimento:</strong> <span id="modalPersonDeathDate"></span></p>
+                    <p><strong>Gênero:</strong> <span id="modalPersonGender"></span></p>
+                    <p><strong>Pai:</strong> <span id="modalPersonFather"></span></p>
+                    <p><strong>Mãe:</strong> <span id="modalPersonMother"></span></p>
+                    <p><strong>Parentesco em relação a você:</strong> <span id="modalPersonRelationship"></span></p>
+                    <p><strong>Status de Vida:</strong> <span id="modalPersonStatus"></span></p>
+                    <p><strong>Local de Nascimento:</strong> <span id="modalPersonLocalNascimento"></span></p>
+                    <p><strong>Estado de Nascimento:</strong> <span id="modalPersonEstadoNascimento"></span></p> {# NOVO #}
+                    <div id="modalPersonHistoryContainer" style="display: none;">
+                        <p><strong>História Pessoal:</strong></p>
+                        <p id="modalPersonHistory"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a id="modalEditButton" href="#" class="btn btn-warning">Editar</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    {# Script para passar os dados da árvore para o JavaScript. Use json_script para segurança. #}
+    {{ all_tree_data|json_script:"all-tree-data" }}
+
+    <script>
+        // Pega os dados JSON que foram embutidos pelo Django
+        const allTreeDataElement = document.getElementById('all-tree-data');
+        const allTreeData = JSON.parse(allTreeDataElement.textContent);
+        const personsData = allTreeData.persons;
+
+        // Seleciona o modal e seus elementos internos para preenchimento
+        const personDetailsModal = document.getElementById('personDetailsModal');
+        const modalTitle = document.getElementById('personDetailsModalLabel');
+        const modalPersonPhoto = document.getElementById('modalPersonPhoto');
+        const modalPersonName = document.getElementById('modalPersonName');
+        const modalPersonBirthDate = document.getElementById('modalPersonBirthDate');
+        const modalPersonAge = document.getElementById('modalPersonAge');
+        const modalPersonDeathDate = document.getElementById('modalPersonDeathDate');
+        const modalPersonGender = document.getElementById('modalPersonGender');
+        const modalPersonFather = document.getElementById('modalPersonFather');
+        const modalPersonMother = document.getElementById('modalPersonMother');
+        const modalPersonRelationship = document.getElementById('modalPersonRelationship');
+        const modalPersonStatus = document.getElementById('modalPersonStatus');
+        const modalPersonLocalNascimento = document.getElementById('modalPersonLocalNascimento');
+        const modalPersonEstadoNascimento = document.getElementById('modalPersonEstadoNascimento'); // NOVO
+        const modalPersonHistoryContainer = document.getElementById('modalPersonHistoryContainer');
+        const modalPersonHistory = document.getElementById('modalPersonHistory');
+        const modalEditButton = document.getElementById('modalEditButton');
+
+        // Adiciona um listener para o evento 'show.bs.modal' (antes do modal ser exibido)
+        personDetailsModal.addEventListener('show.bs.modal', function (event) {
+            // O botão que disparou o modal
+            const button = event.relatedTarget;
+            // Extrai o ID da pessoa do atributo data-person-id do botão
+            const personId = button.getAttribute('data-person-id');
+            // Encontra os dados da pessoa no objeto 'personsData'
+            const person = personsData[personId];
+
+            if (person) {
+                modalTitle.textContent = person.nome;
+                modalPersonPhoto.src = person.foto_url; 
+                modalPersonPhoto.alt = person.nome;
+                modalPersonName.textContent = person.nome;
+                modalPersonBirthDate.textContent = person.data_nascimento ? new Date(person.data_nascimento).toLocaleDateString('pt-BR') : 'Não informado';
+                modalPersonAge.textContent = person.idade || 'N/A';
+                
+                if (person.data_falecimento) {
+                    modalPersonDeathDate.textContent = new Date(person.data_falecimento).toLocaleDateString('pt-BR');
+                } else if (person.data_falecimento_incerta) {
+                    modalPersonDeathDate.textContent = `(Incerta) ${person.data_falecimento_incerta}`;
+                } else {
+                    modalPersonDeathDate.textContent = 'Vivo(a)';
+                }
+
+                modalPersonGender.textContent = person.genero;
+                modalPersonRelationship.textContent = person.relacao;
+                modalPersonStatus.textContent = person.status_vida;
+
+                modalPersonLocalNascimento.textContent = person.local_nascimento || 'Não informado';
+                modalPersonEstadoNascimento.textContent = person.estado_nascimento || 'Não informado'; // NOVO
+
+                if (person.pai_id && personsData[person.pai_id]) {
+                    const father = personsData[person.pai_id];
+                    modalPersonFather.innerHTML = `<a href="/arvore/${father.id}/">${father.nome}</a>`;
+                } else {
+                    modalPersonFather.textContent = 'Não informado';
+                }
+
+                if (person.mae_id && personsData[person.mae_id]) {
+                    const mother = personsData[person.mae_id];
+                    modalPersonMother.innerHTML = `<a href="/arvore/${mother.id}/">${mother.nome}</a>`;
+                } else {
+                    modalPersonMother.textContent = 'Não informado';
+                }
+
+                if (person.historia_pessoal) {
+                    modalPersonHistoryContainer.style.display = 'block';
+                    modalPersonHistory.innerHTML = person.historia_pessoal.replace(/\n/g, '<br>');
+                } else {
+                    modalPersonHistoryContainer.style.display = 'none';
+                    modalPersonHistory.textContent = '';
+                }
+                
+                modalEditButton.href = `/pessoas/editar/${person.id}/`;
+            }
+        });
+    </script>
 </body>
 </html>

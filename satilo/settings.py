@@ -11,7 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-import os
+import os # Importar 'os' é importante para manipulação de caminhos
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -37,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'pessoas',
+    'pessoas', # Sua app 'pessoas'
 ]
 
 MIDDLEWARE = [
@@ -55,8 +56,8 @@ ROOT_URLCONF = 'satilo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
+        'DIRS': [BASE_DIR / 'templates'], # Pasta de templates na raiz do projeto
+        'APP_DIRS': True, # Isso permite que o Django procure por templates dentro das apps (app_name/templates/)
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
@@ -103,9 +104,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'pt-br'
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
@@ -115,11 +115,34 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+# A URL onde os arquivos estáticos serão servidos (ex: /static/css/style.css)
+STATIC_URL = '/static/'
+
+# Diretórios onde o Django DEVE PROCURAR por arquivos estáticos *adicionais* durante o desenvolvimento.
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'pessoas', 'static'), # Para a imagem sem-foto.jpg, por exemplo
+]
+
+# O DIRETÓRIO ABSOLUTO para onde o 'collectstatic' irá COPIAR todos os arquivos estáticos.
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
+# Media Files (Arquivos enviados pelo usuário, como fotos)
+# https://docs.djangoproject.com/en/5.2/topics/files/
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
+# Configurações de Autenticação (Login e Cadastro)
+# Redireciona para a home_page após login bem-sucedido
+LOGIN_REDIRECT_URL = 'home_page' 
+# Redireciona para a home_page após logout bem-sucedido
+LOGOUT_REDIRECT_URL = 'home_page' 
+# URL para a página de login (usado por @login_required decorators, por exemplo)
+LOGIN_URL = 'login'
