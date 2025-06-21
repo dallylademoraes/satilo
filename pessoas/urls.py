@@ -8,12 +8,10 @@ urlpatterns = [
     path('pessoas/', views.ListaPessoas.as_view(), name='lista_pessoas'),
     path('pessoas/nova/', views.CriaPessoa.as_view(), name='cria_pessoa'),
     path('pessoas/editar/<int:pk>/', views.EditaPessoa.as_view(), name='edita_pessoa'),
-    path('pessoas/definir_eu/<int:person_id>/', views.set_user_person, name='set_user_person'),
+    # Adicione esta linha para o set_user_person:
+    path('pessoas/definir-eu/<int:person_id>/', views.set_user_person, name='set_user_person'),
     path('pessoas/arvore/', views.arvore_genealogica, name='arvore_genealogica_default'),
     path('pessoas/arvore/<int:pessoa_id>/', views.arvore_genealogica, name='arvore_genealogica'),
-
-    # NOVO: URL para o cadastro de usuário
-    # A URL está definida como 'accounts/register/' no caminho global (satilo/urls.py)
-    # mas o 'name' é 'register' para ser usado na função reverse ou no template.
     path('accounts/register/', views.register, name='register'),
+    path('excluir/<int:pk>/', views.excluir_pessoa, name='excluir_pessoa'), 
 ]

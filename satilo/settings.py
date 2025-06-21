@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-import os # Importar 'os' é importante para manipulação de caminhos
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,17 +38,38 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'pessoas', # Sua app 'pessoas'
+    'pessoas', 
+    'rest_framework',        
+    'corsheaders',
+    'rest_framework.authtoken',       
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+
+# NOVO: Configurações do Django REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication', 
+        'rest_framework.authentication.TokenAuthentication',  
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated', 
+    ]
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8100",  
+    "http://127.0.0.1:8100", 
 ]
 
 ROOT_URLCONF = 'satilo.urls'
@@ -118,25 +139,19 @@ USE_TZ = True
 # A URL onde os arquivos estáticos serão servidos (ex: /static/css/style.css)
 STATIC_URL = '/static/'
 
-# Diretórios onde o Django DEVE PROCURAR por arquivos estáticos *adicionais* durante o desenvolvimento.
-# Se seus arquivos estáticos estão APENAS dentro das pastas static/app_name/img/,
-# você não precisa da linha os.path.join(BASE_DIR, 'static').
 STATICFILES_DIRS = [
-    # REMOVIDO: os.path.join(BASE_DIR, 'static'), # Causa o aviso se a pasta não existe
-    os.path.join(BASE_DIR, 'pessoas', 'static'), # Esta linha já cobre 'pessoas/static/...'
+    os.path.join(BASE_DIR, 'pessoas', 'static'),
 ]
 
-# O DIRETÓRIO ABSOLUTO para onde o 'collectstatic' irá COPIAR todos os arquivos estáticos.
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-
+AUTH_USER_MODEL = 'auth.User'
 # Media Files (Arquivos enviados pelo usuário, como fotos)
 # https://docs.djangoproject.com/en/5.2/topics/files/
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-# Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

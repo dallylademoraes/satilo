@@ -4,62 +4,60 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Minha Árvore Genealógica</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
-    />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
     <style>
         body {
             margin: 0;
-            padding: 0;
+            padding: 20px; /* Padding de 20px em todas as bordas do body */
             min-height: 100vh;
             background-color: #f8f9fa;
             font-family: sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: center;
-        }
-
-        .container.mt-4 {
-            padding: 20px;
-            box-sizing: border-box;
-            width: 100%;
-            max-width: 1200px;
+            align-items: center; /* Centraliza horizontalmente o conteúdo do body */
+            box-sizing: border-box; /* Garante que o padding seja incluído na largura/altura total */
+            width: 100vw; /* Ocupa 100% da largura da viewport */
         }
 
         h1 {
             text-align: center;
             margin-bottom: 30px;
             color: #343a40;
+            width: 100%; /* Para que o título se estenda por toda a largura */
+            /* O margin: 0 auto; do body já deve centralizar, mas pode ser adicionado aqui se houver mais elementos irmãos. */
+        }
+
+        /* O card de regiões */
+        .card.p-3.mb-4.shadow-sm {
+            width: 100%; /* Ocupa toda a largura disponível (menos o padding do body) */
+            /* O align-items: center do body e o width: 100% já o centralizam. */
         }
 
         .tree-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 20px;
+            align-items: center; /* Centraliza os tree-levels horizontalmente */
+            padding: 20px; /* Padding interno da caixa branca da árvore */
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,.08);
-            overflow-x: auto;
-            min-width: fit-content;
-            margin: 0 auto;
-            width: 100%;
+            overflow-x: auto; /* Permite rolagem horizontal se o conteúdo for muito largo */
+            width: 100%; /* Ocupa toda a largura disponível (menos o padding do body) */
+            margin-top: 20px; /* Adiciona uma margem superior para separar de elementos acima */
+            margin-bottom: 20px; /* Adiciona uma margem inferior para separar de elementos abaixo */
+            flex-shrink: 0; /* Garante que o container da árvore não encolha */
         }
         
         .tree-level {
             display: flex;
             flex-direction: row;
-            justify-content: center;
             align-items: flex-start;
-            gap: 30px;
-            flex-wrap: wrap;
-            margin-bottom: 80px;
+            gap: 50px; 
+            flex-wrap: nowrap; 
+            margin-bottom: 100px;
             position: relative;
             padding-top: 20px;
-            width: 100%;
+            width: fit-content; /* Permite que a linha do nível se ajuste ao conteúdo */
         }
         
         .tree-level:first-child {
@@ -67,27 +65,66 @@
             margin-top: 0;
         }
 
+        /* Restante do seu CSS para .person-group, .person-card, etc. (mantido como está) */
+        .person-group {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 15px; 
+            padding: 15px 10px;
+            border-radius: 8px;
+            position: relative;
+            background-color: #fcfcfc; 
+            box-shadow: 0 1px 3px rgba(0,0,0,.02);
+            border: 1px solid #e9ecef;
+            flex-shrink: 0; 
+        }
+
+        .person-group.couple-group {
+            border: 1px solid #cce5ff; 
+            background-color: #eaf5ff;
+        }
+        .person-group.couple-group::before {
+            content: none; 
+        }
+        .person-group.couple-group .person-card:first-child::after,
+        .person-group.couple-group .person-card:last-child::after {
+            content: none;
+        }
+
+
+        .person-group.sibling-group {
+            border: 1px dashed #ced4da; 
+            background-color: #f8f9fa;
+        }
+        
+        .person-group::before {
+            content: none; 
+        }
+        .tree-level:first-child .person-group::before {
+            content: none; 
+        }
+
+
         .person-card {
             border: 1px solid #dee2e6;
             border-radius: 8px;
             background-color: #fff;
             box-shadow: 0 2px 5px rgba(0,0,0,.05);
-            width: 180px;
-            height: 200px;
+            width: 150px; 
+            min-height: 190px; 
+            height: auto;     
             position: relative;
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            flex-shrink: 0; 
+            margin-bottom: 20px; 
         }
+
         .person-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 4px 12px rgba(0,0,0,.1);
         }
-        .person-card.is-root-node {
-            background-color: #0d6efd;
-            color: white;
-            border-color: #0a58ca;
-            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
-        }
-        
+
         .person-card.is-root-node {
             background-color: #0d6efd;
             color: white;
@@ -125,20 +162,26 @@
             color: #343a40 !important;
         }
         
-        /* --- Linhas de Conexão com CSS Puro --- */
-        .tree-level::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 20px; background-color: #888; z-index: 1; }
-        .tree-level:first-child::before { content: none; }
-
-        .tree-level::after { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 2px; background-color: #888; z-index: 1; }
-        .tree-level:first-child::after { content: none; }
-
-        .person-card::before { content: ''; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 2px; height: 20px; background-color: #888; z-index: 2; }
-        .tree-level:first-child .person-card::before { content: none; }
-
-        .tree-level:not(:last-child)::after { 
-            content: ''; position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); width: 2px; height: 60px; background-color: #888; z-index: 0; 
+        .person-card::after {
+            content: none; 
         }
-        .tree-level:last-child::after { content: none; }
+        .person-card:not(.has-children) ::after {
+            content: none; 
+        }
+
+
+        .tree-level::after { 
+            content: none; 
+        }
+        .tree-level:first-child::after { content: none; } 
+
+        .tree-level:not(:last-child)::before { 
+            content: none; 
+        }
+        .tree-level:last-child::before { 
+            content: none; 
+        }
+
 
         .back-button-container {
             width: 100%;
@@ -150,55 +193,58 @@
         .modal-body img {
             max-width: 100%;
             height: auto;
-            border-radius: 8px;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <h1 class="mb-4">Árvore Genealógica</h1>
-        {% load custom_filters %} 
+    {# Removida a div .container.mt-4, agora o body é o container #}
+    <h1 class="mb-4">Árvore Genealógica</h1>
 
-        {# NOVO: Seção para exibir as origens regionais #}
-        {% if regioes_familiares %}
-        <div class="card p-3 mb-4 shadow-sm">
-            <h4 class="card-title text-center mb-3">Origens Regionais da Família</h4>
-            <div class="row justify-content-center">
-                {% for item in regioes_familiares %}
-                <div class="col-auto mb-2">
-                    <span class="badge bg-primary fs-6 py-2 px-3">
-                        {{ item.regiao }}: {{ item.count }} parentes
-                    </span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
+    {% load custom_filters %} 
 
-        {% if message %}
-            <div class="alert alert-warning">{{ message }}</div>
-        {% elif tree_levels %} 
-            <div class="tree-container">
-                {% for level_data in tree_levels %}
-                    <div class="tree-level">
-                        {% for person_data in level_data.nodes %}
-                            <div class="person-card {% if person_data.is_root_display_node %}is-root-node{% endif %}">
-                                {# Inclui o template do cartão da pessoa, sem o modal interno #}
-                                {% include 'pessoas/_person_card.html' with person_data=person_data %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
+    {% if regioes_familiares %}
+    <div class="card p-3 mb-4 shadow-sm" style="width: 100%;"> {# Ocupa 100% da largura do body (menos o padding do body) #}
+        <h4 class="card-title text-center mb-3">Origens Regionais da Família</h4>
+        <div class="row justify-content-center">
+            {% for item in regioes_familiares %}
+            <div class="col-auto mb-2">
+                <span class="badge bg-primary fs-6 py-2 px-3">
+                    {{ item.regiao }}: {{ item.count }} parentes
+                </span>
             </div>
-        {% else %}
-            <div class="alert alert-warning">Nenhuma pessoa para exibir a árvore.</div>
-        {% endif %}
-        <div class="back-button-container">
-            <a href="{% url 'lista_pessoas' %}" class="btn btn-secondary">Voltar para a lista</a>
+            {% endfor %}
         </div>
     </div>
+    {% endif %}
 
-    {# O MODAL GENÉRICO: Apenas um modal no DOM #}
+    {% if message %}
+        <div class="alert alert-warning" style="width: 100%; margin: 20px 0;">{{ message }}</div> {# Ocupa 100% da largura do body #}
+    {% elif tree_levels %}
+        <div class="tree-container">
+            {% for level_data in tree_levels %}
+                <div class="tree-level" id="tree-level-{{ level_data.level }}">
+                    {% for group in level_data.grouped_nodes %}
+                        <div class="person-group {{ group.group_type }}">
+                            {% for person_data in group.nodes %}
+                                <div class="person-card 
+                                    {% if person_data.is_root_display_node %}is-root-node{% endif %} 
+                                    {% if person_data.is_user_selected %}is-user-selected-card{% endif %}
+                                    {% if all_tree_data.families|get_children_families_for_person:person_data.id %}has-children{% endif %}">
+                                    {% include 'pessoas/_person_card.html' with person_data=person_data %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning" style="width: 100%; margin: 20px 0;">Nenhuma pessoa para exibir a árvore.</div> {# Ocupa 100% da largura do body #}
+    {% endif %}
+    <div class="back-button-container" style="width: 100%; margin: 40px 0 20px 0;"> 
+        <a href="{% url 'lista_pessoas' %}" class="btn btn-secondary">Voltar para a lista</a>
+    </div>
+
     <div class="modal fade" id="personDetailsModal" tabindex="-1" aria-labelledby="personDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -220,7 +266,7 @@
                     <p><strong>Parentesco em relação a você:</strong> <span id="modalPersonRelationship"></span></p>
                     <p><strong>Status de Vida:</strong> <span id="modalPersonStatus"></span></p>
                     <p><strong>Local de Nascimento:</strong> <span id="modalPersonLocalNascimento"></span></p>
-                    <p><strong>Estado de Nascimento:</strong> <span id="modalPersonEstadoNascimento"></span></p> {# NOVO #}
+                    <p><strong>Estado de Nascimento:</strong> <span id="modalPersonEstadoNascimento"></span></p>
                     <div id="modalPersonHistoryContainer" style="display: none;">
                         <p><strong>História Pessoal:</strong></p>
                         <p id="modalPersonHistory"></p>
@@ -234,18 +280,34 @@
         </div>
     </div>
 
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza que deseja excluir <strong id="personNameToDelete"></strong>? Esta ação é irreversível e pode desconectar partes da árvore.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteButton">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
-    {# Script para passar os dados da árvore para o JavaScript. Use json_script para segurança. #}
     {{ all_tree_data|json_script:"all-tree-data" }}
 
     <script>
-        // Pega os dados JSON que foram embutidos pelo Django
         const allTreeDataElement = document.getElementById('all-tree-data');
         const allTreeData = JSON.parse(allTreeDataElement.textContent);
         const personsData = allTreeData.persons;
+        const familiesData = allTreeData.families; 
 
-        // Seleciona o modal e seus elementos internos para preenchimento
         const personDetailsModal = document.getElementById('personDetailsModal');
         const modalTitle = document.getElementById('personDetailsModalLabel');
         const modalPersonPhoto = document.getElementById('modalPersonPhoto');
@@ -259,18 +321,14 @@
         const modalPersonRelationship = document.getElementById('modalPersonRelationship');
         const modalPersonStatus = document.getElementById('modalPersonStatus');
         const modalPersonLocalNascimento = document.getElementById('modalPersonLocalNascimento');
-        const modalPersonEstadoNascimento = document.getElementById('modalPersonEstadoNascimento'); // NOVO
+        const modalPersonEstadoNascimento = document.getElementById('modalPersonEstadoNascimento');
         const modalPersonHistoryContainer = document.getElementById('modalPersonHistoryContainer');
         const modalPersonHistory = document.getElementById('modalPersonHistory');
         const modalEditButton = document.getElementById('modalEditButton');
 
-        // Adiciona um listener para o evento 'show.bs.modal' (antes do modal ser exibido)
         personDetailsModal.addEventListener('show.bs.modal', function (event) {
-            // O botão que disparou o modal
             const button = event.relatedTarget;
-            // Extrai o ID da pessoa do atributo data-person-id do botão
             const personId = button.getAttribute('data-person-id');
-            // Encontra os dados da pessoa no objeto 'personsData'
             const person = personsData[personId];
 
             if (person) {
@@ -294,21 +352,21 @@
                 modalPersonStatus.textContent = person.status_vida;
 
                 modalPersonLocalNascimento.textContent = person.local_nascimento || 'Não informado';
-                modalPersonEstadoNascimento.textContent = person.estado_nascimento || 'Não informado'; // NOVO
+                modalPersonEstadoNascimento.textContent = person.estado_nascimento || 'Não informado';
+
+                let fatherName = 'Não informado';
+                let motherName = 'Não informado';
 
                 if (person.pai_id && personsData[person.pai_id]) {
-                    const father = personsData[person.pai_id];
-                    modalPersonFather.innerHTML = `<a href="/arvore/${father.id}/">${father.nome}</a>`;
-                } else {
-                    modalPersonFather.textContent = 'Não informado';
+                    fatherName = `<a href="/pessoas/arvore/${person.pai_id}/">${personsData[person.pai_id].nome}</a>`;
                 }
-
                 if (person.mae_id && personsData[person.mae_id]) {
-                    const mother = personsData[person.mae_id];
-                    modalPersonMother.innerHTML = `<a href="/arvore/${mother.id}/">${mother.nome}</a>`;
-                } else {
-                    modalPersonMother.textContent = 'Não informado';
+                    motherName = `<a href="/pessoas/arvore/${person.mae_id}/">${personsData[person.mae_id].nome}</a>`;
                 }
+                
+                modalPersonFather.innerHTML = fatherName;
+                modalPersonMother.innerHTML = motherName;
+
 
                 if (person.historia_pessoal) {
                     modalPersonHistoryContainer.style.display = 'block';
@@ -321,6 +379,41 @@
                 modalEditButton.href = `/pessoas/editar/${person.id}/`;
             }
         });
+
+        // Lógica para o Modal de Confirmação de Exclusão
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        const personNameToDelete = document.getElementById('personNameToDelete');
+        const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+        let personIdToDelete = null;
+
+        confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Botão que acionou o modal
+            personIdToDelete = button.getAttribute('data-person-id');
+            const personName = button.getAttribute('data-person-name');
+            personNameToDelete.textContent = personName;
+        });
+
+        confirmDeleteButton.addEventListener('click', function () {
+            if (personIdToDelete) {
+                const deleteUrl = `/pessoas/excluir/${personIdToDelete}/`;
+
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = deleteUrl;
+                
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = '{{ csrf_token }}'; 
+                form.appendChild(csrfInput);
+
+                document.body.appendChild(form);
+                form.submit(); 
+            }
+        });
+    </script>
+    <script>
+        // Custom filters are now in custom_filters.py
     </script>
 </body>
 </html>

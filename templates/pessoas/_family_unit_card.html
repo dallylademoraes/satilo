@@ -1,0 +1,40 @@
+{# satilo/templates/pessoas/_family_unit_card.html #}
+{# Este template renderiza uma unidade familiar (casal ou pessoa solo) #}
+{# Recebe 'unit_data' (dicionário da unidade familiar) e 'all_nodes_map' (todos os dados de pessoas) #}
+{% load custom_filters %}
+
+<div class="family-unit-card-container" id="unit-{{ unit_data.id }}">
+    {% if unit_data.type == 'family_unit_solo' %}
+        {% if unit_data.render_solo_card %} {# Renderiza apenas se a flag permitir #}
+            <div class="person-card {% if unit_data.solo_person.is_root_display_node %}is-root-node{% endif %}" id="person-{{ unit_data.solo_person.id }}">
+                {% include 'pessoas/_person_card.html' with person_data=unit_data.solo_person %}
+            </div>
+        {% else %}
+            {# Placeholder invisível para o JS obter a posição, se o card não for renderizado #}
+            <div class="person-card-placeholder" id="person-{{ unit_data.solo_person.id }}" style="width: 180px; height: 200px; opacity: 0; pointer-events: none;"></div>
+        {% endif %}
+    {% else %}
+        {# Se for uma unidade familiar com marido e/ou esposa #}
+        {% if unit_data.husband %}
+            {% if unit_data.render_husband_card %} {# Renderiza apenas se a flag permitir #}
+                <div class="person-card {% if unit_data.husband.is_root_display_node %}is-root-node{% endif %}" id="person-{{ unit_data.husband.id }}">
+                    {% include 'pessoas/_person_card.html' with person_data=unit_data.husband %}
+                </div>
+            {% else %}
+                {# Placeholder invisível para o JS obter a posição, se o card não for renderizado #}
+                <div class="person-card-placeholder" id="person-{{ unit_data.husband.id }}" style="width: 180px; height: 200px; opacity: 0; pointer-events: none;"></div>
+            {% endif %}
+        {% endif %}
+        
+        {% if unit_data.wife %}
+            {% if unit_data.render_wife_card %} {# Renderiza apenas se a flag permitir #}
+                <div class="person-card {% if unit_data.wife.is_root_display_node %}is-root-node{% endif %}" id="person-{{ unit_data.wife.id }}">
+                    {% include 'pessoas/_person_card.html' with person_data=unit_data.wife %}
+                </div>
+            {% else %}
+                {# Placeholder invisível para o JS obter a posição, se o card não for renderizado #}
+                <div class="person-card-placeholder" id="person-{{ unit_data.wife.id }}" style="width: 180px; height: 200px; opacity: 0; pointer-events: none;"></div>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+</div>

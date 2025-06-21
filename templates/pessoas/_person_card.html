@@ -2,31 +2,64 @@
 {# Recebe 'person_data' que é o dicionário de dados da pessoa #}
 {% load custom_filters %} 
 
-<div class="card person-card-inner-content h-100 border-0 {% if person_data.is_user_selected %}is-user-selected-card{% endif %}"> 
-    <div class="card-body d-flex flex-column align-items-center py-2 px-1">
-        {# A URL da foto já vem preparada da view (views.py -> _get_person_data), #}
-        {# contendo a foto da pessoa ou 'sem-foto.jpg' #}
+<div class="card person-card-inner-content h-100 border-0 
+    {% if person_data.is_user_selected %}is-user-selected-card{% endif %}
+    {% if person_data.status_vida == 'Falecido' or person_data.status_vida == 'Falecida' %}person-card-falecido{% endif %}
+    {% if person_data.genero == 'Masculino' %}person-card-masculino{% endif %}
+    {% if person_data.genero == 'Feminino' %}person-card-feminino{% endif %}
+    {% if not person_data.foto_url %}person-card-no-photo{% endif %}
+    "> 
+    <div class="card-body d-flex flex-column align-items-center p-2">
         <img src="{{ person_data.foto_url }}" alt="{{ person_data.nome }}" class="img-fluid rounded-circle mb-1" style="width: 70px; height: 70px; object-fit: cover; border: 3px solid #ddd;">
         
-        <h5 class="card-title name text-center mb-0 flex-shrink-0" style="font-size: 0.9em; line-height: 1.1;">
-            {{ person_data.nome }} {% if person_data.is_user_selected %} <span class="badge bg-success" style="color: #212529 !important;">Você</span>{% endif %}
+        {# Removido 'overflow-hidden', 'max-height', '-webkit-line-clamp' do style do h5 #}
+        <h5 class="card-title name text-center mb-0" 
+            style="font-size: 0.95em; line-height: 1.2; word-break: break-word;">
+            {{ person_data.nome }} {% if person_data.is_user_selected %} <span class="badge bg-success" style="color: #212529 !important; font-size: 0.65em;">Você</span>{% endif %}
         </h5>
         
-        <div class="details text-muted text-center flex-grow-1 d-flex flex-column justify-content-center w-100" style="font-size: 0.65em; line-height: 1.05;">
-            {% if person_data.data_nascimento %}
-                <small class="text-nowrap d-block">Nasc.: {{ person_data.data_nascimento|date:"d/m/Y" }}</small>
-            {% endif %}
-            <small class="text-nowrap d-block">Idade: {% if person_data.idade %}{{ person_data.idade }}{% else %}N/A{% endif %}</small>
-            <small class="text-nowrap d-block">Gênero: {{ person_data.genero }}</small>
-            <small class="text-nowrap d-block">Parentesco: <strong>{{ person_data.relacao }}</strong></small>
-            <small class="text-nowrap d-block">Status: {{ person_data.status_vida }}</small>
+        {# Removido 'overflow-hidden' e 'flex-grow-1' do div.details #}
+        <div class="details text-muted text-center w-100" 
+             style="font-size: 0.75em; line-height: 1.3; margin-top: 0.25rem;">
+            <small class="d-block">Idade: {% if person_data.idade %}{{ person_data.idade }}{% else %}N/A{% endif %}</small>
+            <small class="d-block">Gênero: {{ person_data.genero }}</small>
+            <small class="d-block">Parentesco: <strong>{{ person_data.relacao }}</strong></small>
+            <small class="d-block">Status: {{ person_data.status_vida }}</small>
             {% if person_data.local_nascimento %}
-                <small class="text-nowrap d-block">Local Nasc.: {{ person_data.local_nascimento }}</small>
+                {# Removido 'overflow-hidden', 'white-space: nowrap', 'text-overflow: ellipsis' #}
+                <small class="d-block">Local Nasc.: {{ person_data.local_nascimento }}</small>
             {% endif %}
         </div>
         
-        <button class="btn btn-sm btn-info mt-auto" data-bs-toggle="modal" data-bs-target="#personDetailsModal" data-person-id="{{ person_data.id }}" style="font-size: 0.7em; padding: 0.2em 0.5em;">
-            Detalhes
-        </button>
+        <div class="d-flex justify-content-center align-items-center gap-1 mt-auto w-100">
+            {# BOTÃO DE DETALHES AGORA COMO UM ÍCONE MINIMALISTA #}
+            <button class="btn btn-sm btn-link text-primary p-0" 
+                    data-bs-toggle="modal" data-bs-target="#personDetailsModal" 
+                    data-person-id="{{ person_data.id }}" 
+                    title="Ver detalhes do membro" 
+                    style="font-size: 0.8em; 
+                           width: 25px; 
+                           height: 25px; 
+                           display: flex; justify-content: center; align-items: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                </svg>
+            </button>
+            {# BOTÃO DE EXCLUIR MAIS DISCRETO (mantido como está) #}
+            <button class="btn btn-sm btn-link text-danger p-0" 
+                    data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" 
+                    data-person-id="{{ person_data.id }}" data-person-name="{{ person_data.nome }}" 
+                    title="Excluir membro" 
+                    style="font-size: 0.8em; 
+                           width: 25px; 
+                           height: 25px; 
+                           display: flex; justify-content: center; align-items: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                </svg>
+            </button>
+        </div>
     </div>
 </div>

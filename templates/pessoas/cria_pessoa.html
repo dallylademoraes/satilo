@@ -97,40 +97,62 @@
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
-                    {% for field in form %}
-                        <div class="mb-2">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            
-                            {% if field.name == 'historia_pessoal' %}
-                                <textarea class="form-control {% if field.errors %}is-invalid{% endif %}" name="{{ field.name }}" id="{{ field.id_for_label }}" rows="5">{{ field.value|default:'' }}</textarea>
-                            {% elif field.field.widget.input_type == 'file' %}
-                                <div class="custom-file-upload">
-                                    <label for="{{ field.id_for_label }}">Escolher arquivo</label>
-                                    <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control-file {% if field.errors %}is-invalid{% endif %}" accept="image/*">
-                                    <span id="file-name-{{ field.id_for_label }}" class="file-name-display">
-                                        {% if field.value %}{{ field.value.name }}{% else %}Nenhum arquivo escolhido{% endif %}
-                                    </span>
-                                </div>
-                            {% elif field.name == 'data_falecimento' %}
-                                {{ field.as_widget }}
-                                <div class="form-text">Preencha apenas se a data de falecimento exata for conhecida.</div>
-                            {% elif field.name == 'data_falecimento_incerta' %}
-                                {{ field.as_widget }}
-                                <div class="form-text">Use para datas de falecimento aproximadas ou desconhecidas.</div>
-                            {% elif field.name == 'estado_nascimento' %} {# NOVO CAMPO: ESTADO DE NASCIMENTO #}
-                                {{ field.as_widget }}
-                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                            {% else %}
-                                {{ field.as_widget }} 
-                            {% endif %}
-
-                            {% if field.help_text and field.name != 'estado_nascimento' %} {# Exibe help_text para outros campos #}
-                                <div class="form-text">{{ field.help_text }}</div>
-                            {% endif %}
-                            {% for error in field.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
+                    {# --- DEBUG: Exibir erros não relacionados a campos específicos --- #}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <h5>Erro(s) no Formulário:</h5>
+                            <ul>
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
                         </div>
+                    {% endif %}
+                    {# --- FIM DEBUG --- #}
+
+                    {% for field in form %}
+                        {# Renderiza o campo SOMENTE se não for 'user', 'owner' ou 'relacao' #}
+                        {# Note: 'user' e 'relacao' foram removidos do models.py, então não devem mais aparecer aqui. #}
+                        {# Mas mantive a condição para compatibilidade se você não fez as migrações ainda. #}
+                        {% if field.name != 'user' and field.name != 'owner' and field.name != 'relacao' %}
+                            <div class="mb-2">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                
+                                {% if field.name == 'historia_pessoal' %}
+                                    <textarea class="form-control {% if field.errors %}is-invalid{% endif %}" name="{{ field.name }}" id="{{ field.id_for_label }}" rows="5">{{ field.value|default:'' }}</textarea>
+                                {% elif field.field.widget.input_type == 'file' %}
+                                    <div class="custom-file-upload">
+                                        <label for="{{ field.id_for_label }}">Escolher arquivo</label>
+                                        <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control-file {% if field.errors %}is-invalid{% endif %}" accept="image/*">
+                                        <span id="file-name-{{ field.id_for_label }}" class="file-name-display">
+                                            {% if field.value %}{{ field.value.name }}{% else %}Nenhum arquivo escolhido{% endif %}
+                                        </span>
+                                    </div>
+                                {% elif field.name == 'data_falecimento' %}
+                                    {{ field.as_widget }}
+                                    <div class="form-text">Preencha apenas se a data de falecimento exata for conhecida.</div>
+                                {% elif field.name == 'data_falecimento_incerta' %}
+                                    {{ field.as_widget }}
+                                    <div class="form-text">Use para datas de falecimento aproximadas ou desconhecidas.</div>
+                                {% elif field.name == 'estado_nascimento' %} 
+                                    {{ field.as_widget }}
+                                    {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                                {% else %}
+                                    {{ field.as_widget }} 
+                                {% endif %}
+
+                                {% if field.help_text and field.name != 'estado_nascimento' %} 
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                {# --- DEBUG: Mensagens de erro de campo específicas --- #}
+                                {% for error in field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <strong>ERRO:</strong> {{ error }}
+                                    </div>
+                                {% endfor %}
+                                {# --- FIM DEBUG --- #}
+                            </div>
+                        {% endif %} {# Fim do if para pular campos #}
                     {% endfor %}
 
                     {# ==== Área de Preview ==== #}
@@ -143,7 +165,7 @@
                         <p id="preview-idade">Idade: N/A</p>
                         <p id="preview-status-vida">Status: Vivo(a)</p>
                         <p id="preview-local-nascimento">Local Nasc.: Não Informado</p>
-                        <p id="preview-estado-nascimento">Estado Nasc.: Não Informado</p> {# NOVO #}
+                        <p id="preview-estado-nascimento">Estado Nasc.: Não Informado</p> 
                     </div>
                     {# ======================= #}
 
@@ -188,7 +210,7 @@
         const dataFalecimentoInput = document.getElementById('id_data_falecimento');
         const dataFalecimentoIncertaInput = document.getElementById('id_data_falecimento_incerta');
         const localNascimentoInput = document.getElementById('id_local_nascimento');
-        const estadoNascimentoInput = document.getElementById('id_estado_nascimento'); // NOVO
+        const estadoNascimentoInput = document.getElementById('id_estado_nascimento'); 
         const fotoInput = document.getElementById('id_foto');
 
         // Referências aos elementos de preview
@@ -198,7 +220,7 @@
         const previewIdade = document.getElementById('preview-idade');
         const previewStatusVida = document.getElementById('preview-status-vida');
         const previewLocalNascimento = document.getElementById('preview-local-nascimento');
-        const previewEstadoNascimento = document.getElementById('preview-estado-nascimento'); // NOVO
+        const previewEstadoNascimento = document.getElementById('preview-estado-nascimento'); 
         const previewFoto = document.getElementById('preview-foto');
         const fileNameDisplay = document.getElementById('file-name-id_foto');
 
@@ -209,13 +231,14 @@
                    (dataFalecimentoInput && dataFalecimentoInput.value.trim() !== '') ||
                    (dataFalecimentoIncertaInput && dataFalecimentoIncertaInput.value.trim() !== '') ||
                    (localNascimentoInput && localNascimentoInput.value.trim() !== '') ||
-                   (estadoNascimentoInput && estadoNascimentoInput.value.trim() !== '') || // NOVO
+                   (estadoNascimentoInput && estadoNascimentoInput.value.trim() !== '') || 
                    (fotoInput && fotoInput.files && fotoInput.files.length > 0) ||
                    (previewFoto.src !== window.location.origin + "{% load static %}{% static 'pessoas/img/sem-foto.jpg' %}");
         }
 
         // Função para atualizar o preview
         function updatePreview() {
+            console.log("DEBUG JS: Atualizando preview...");
             previewNome.textContent = (nomeInput && nomeInput.value) ? nomeInput.value : 'Nome da Pessoa';
             previewDataNascimento.textContent = `Nasc.: ${format_date((dataNascimentoInput && dataNascimentoInput.value) ? dataNascimentoInput.value : null)}`;
 
@@ -240,15 +263,14 @@
             previewStatusVida.textContent = `Status: ${statusVidaDisplay}`;
             previewLocalNascimento.textContent = `Local Nasc.: ${ (localNascimentoInput && localNascimentoInput.value) ? localNascimentoInput.value : 'Não Informado' }`;
             
-            // NOVO: Atualiza o preview do Estado de Nascimento
             previewEstadoNascimento.textContent = `Estado Nasc.: ${ (estadoNascimentoInput && estadoNascimentoInput.value) ? estadoNascimentoInput.options[estadoNascimentoInput.selectedIndex].text : 'Não Informado' }`;
-
 
             if (hasPreviewContent()) {
                 previewCard.classList.add('has-content');
             } else {
                 previewCard.classList.remove('has-content');
             }
+            console.log("DEBUG JS: Preview atualizado.");
         }
 
         // Event Listeners
@@ -257,12 +279,13 @@
         if (dataFalecimentoInput) dataFalecimentoInput.addEventListener('change', updatePreview);
         if (dataFalecimentoIncertaInput) dataFalecimentoIncertaInput.addEventListener('input', updatePreview);
         if (localNascimentoInput) localNascimentoInput.addEventListener('input', updatePreview);
-        if (estadoNascimentoInput) estadoNascimentoInput.addEventListener('change', updatePreview); // NOVO
+        if (estadoNascimentoInput) estadoNascimentoInput.addEventListener('change', updatePreview);
 
 
         // Listener para o preview da foto
         if (fotoInput) {
             fotoInput.addEventListener('change', function() {
+                console.log("DEBUG JS: Mudança na foto detectada.");
                 const file = this.files && this.files.length > 0 ? this.files[0] : null;
 
                 if (file) {
@@ -270,6 +293,7 @@
                     reader.onload = function(e) {
                         previewFoto.src = e.target.result;
                         previewFoto.classList.remove('placeholder-image');
+                        console.log("DEBUG JS: Foto carregada para preview.");
                     }
                     reader.readAsDataURL(file);
                     fileNameDisplay.textContent = file.name;
@@ -277,11 +301,13 @@
                     previewFoto.src = "{% load static %}{% static 'pessoas/img/sem-foto.jpg' %}";
                     previewFoto.classList.add('placeholder-image');
                     fileNameDisplay.textContent = 'Nenhum arquivo escolhido';
+                    console.log("DEBUG JS: Nenhuma foto selecionada, usando placeholder.");
                 }
                 updatePreview();
             });
 
             document.addEventListener('DOMContentLoaded', function() {
+                console.log("DEBUG JS: DOMContentLoaded - inicializando preview da foto.");
                 const initialPhotoUrl = "{% if form.foto.value %}{{ form.foto.value.url }}{% else %}{% load static %}{% static 'pessoas/img/sem-foto.jpg' %}{% endif %}";
                 previewFoto.src = initialPhotoUrl;
                 if (initialPhotoUrl === "{% load static %}{% static 'pessoas/img/sem-foto.jpg' %}") {
@@ -293,6 +319,7 @@
             });
         } else {
             document.addEventListener('DOMContentLoaded', function() {
+                console.log("DEBUG JS: DOMContentLoaded - fotoInput não encontrado, usando placeholder padrão.");
                 previewFoto.src = "{% load static %}{% static 'pessoas/img/sem-foto.jpg' %}";
                 previewFoto.classList.add('placeholder-image');
                 updatePreview();

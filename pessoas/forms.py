@@ -2,12 +2,12 @@
 
 from django import forms
 from .models import Pessoa
-from django.contrib.auth.forms import UserCreationForm # Importa o formulário de criação de usuário do Django
-from django.contrib.auth.models import User # Importa o modelo User padrão do Django
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
-# ... (seus ESTADOS_BRASILEIROS_CHOICES aqui) ...
+# Seus ESTADOS_BRASILEIROS_CHOICES
 ESTADOS_BRASILEIROS_CHOICES = [
-    ('', '---------- Selecione o Estado ----------'), # Opção vazia padrão
+    ('', '---------- Selecione o Estado ----------'),
     ('AC', 'Acre'), ('AL', 'Alagoas'), ('AP', 'Amapá'), ('AM', 'Amazonas'),
     ('BA', 'Bahia'), ('CE', 'Ceará'), ('DF', 'Distrito Federal'), ('ES', 'Espírito Santo'),
     ('GO', 'Goiás'), ('MA', 'Maranhão'), ('MT', 'Mato Grosso'), ('MS', 'Mato Grosso do Sul'),
@@ -21,7 +21,13 @@ ESTADOS_BRASILEIROS_CHOICES = [
 class PessoaForm(forms.ModelForm):
     class Meta:
         model = Pessoa
-        fields = '__all__'
+        # MUITO IMPORTANTE: EXCLUIR 'owner' E 'relacao' do formulário,
+        # pois eles serão preenchidos programaticamente ou são campos calculados.
+        # Se 'user' (OneToOneField) ainda estiver no seu models.py, adicione-o aqui também.
+        exclude = ('owner',) # 'relacao' já foi removido do modelo na atualização anterior.
+                             # Se você ainda tiver o campo 'user' (OneToOneField) no models.py
+                             # de alguma forma, adicione-o aqui também: exclude = ('owner', 'user',)
+        
         widgets = {
             'data_nascimento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'data_falecimento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -37,25 +43,46 @@ class PessoaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # A request precisa ser removida de kwargs antes de chamar super().__init__()
+        # para que o ModelForm não tente processá-la como um dado do modelo.
+        request = kwargs.pop('request', None) 
         super().__init__(*args, **kwargs)
 
-        if self.instance and self.instance.pk:
-            self.fields['pai'].queryset = Pessoa.objects.filter(genero='M').exclude(pk=self.instance.pk)
-            self.fields['mae'].queryset = Pessoa.objects.filter(genero='F').exclude(pk=self.instance.pk)
-        else:
-            self.fields['pai'].queryset = Pessoa.objects.filter(genero='M')
-            self.fields['mae'].queryset = Pessoa.objects.filter(genero='F')
+        # Filtragem dos campos pai e mãe com base no usuário logado.
+        # Self.instance existe se for um formulário de edição (UpdateView).
+        # Request existe se for um formulário de criação (CreateView) ou se passada explicitamente.
+        if self.instance and self.instance.pk: # Modo de edição
+            # Filtra pai/mãe para serem do mesmo owner da pessoa que está sendo editada,
+            # ou qualquer pessoa se o owner for superuser.
+            if self.instance.owner and self.instance.owner.is_superuser:
+                self.fields['pai'].queryset = Pessoa.objects.filter(genero='M').exclude(pk=self.instance.pk)
+                self.fields['mae'].queryset = Pessoa.objects.filter(genero='F').exclude(pk=self.instance.pk)
+            else:
+                self.fields['pai'].queryset = Pessoa.objects.filter(genero='M', owner=self.instance.owner).exclude(pk=self.instance.pk)
+                self.fields['mae'].queryset = Pessoa.objects.filter(genero='F', owner=self.instance.owner).exclude(pk=self.instance.pk)
+        elif request and request.user.is_authenticated: # Modo de criação para usuário logado
+            # Filtra pai/mãe para serem do mesmo owner do usuário logado que está criando.
+            if request.user.is_superuser:
+                self.fields['pai'].queryset = Pessoa.objects.filter(genero='M')
+                self.fields['mae'].queryset = Pessoa.objects.filter(genero='F')
+            else:
+                self.fields['pai'].queryset = Pessoa.objects.filter(genero='M', owner=request.user)
+                self.fields['mae'].queryset = Pessoa.objects.filter(genero='F', owner=request.user)
+        else: # Cenário fallback (ex: admin sem request, ou não logado)
+              # Pode ser um queryset vazio ou todos, dependendo da sua regra de negócio para não logados.
+              # Mantendo o que você tinha, que é buscar todos, o que pode ser perigoso se não for superuser.
+              # Se um usuário não logado tentar criar, ele não deve ver ninguém para pai/mãe.
+            self.fields['pai'].queryset = Pessoa.objects.none() # Ninguém para escolher se não logado
+            self.fields['mae'].queryset = Pessoa.objects.none()
 
         self.fields['pai'].empty_label = "----------"
         self.fields['mae'].empty_label = "----------"
 
+        # Loop para adicionar classes Bootstrap a campos não especificados nos widgets
         for field_name, field in self.fields.items():
+            # Evita sobrescrever os widgets já definidos na Meta
             if field_name not in self.Meta.widgets:
-                if isinstance(field.widget, forms.TextInput) or \
-                   isinstance(field.widget, forms.Textarea) or \
-                   isinstance(field.widget, forms.DateInput) or \
-                   isinstance(field.widget, forms.EmailInput) or \
-                   isinstance(field.widget, forms.NumberInput):
+                if isinstance(field.widget, (forms.TextInput, forms.Textarea, forms.DateInput, forms.EmailInput, forms.NumberInput)):
                     field.widget.attrs['class'] = 'form-control'
                 elif isinstance(field.widget, forms.Select):
                     field.widget.attrs['class'] = 'form-select'
@@ -64,6 +91,7 @@ class PessoaForm(forms.ModelForm):
                 elif isinstance(field.widget, forms.FileInput):
                     field.widget.attrs['class'] = 'form-control-file'
 
+    # Removi o comentário do método clean(), você pode ativá-lo quando o problema principal estiver resolvido.
     def clean(self):
         cleaned_data = super().clean()
         data_falecimento = cleaned_data.get('data_falecimento')
@@ -76,11 +104,11 @@ class PessoaForm(forms.ModelForm):
                            "Por favor, preencha apenas 'Data de Falecimento' ou 'Data de Falecimento (Incerta)', não ambos.")
         return cleaned_data
 
-# NOVO: Formulário para registro de usuário
+# Formulário para registro de usuário
 class UserRegistrationForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ('username', 'email') # Você pode adicionar mais campos se quiser estender o modelo User
+        fields = ('username', 'email')
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
@@ -88,6 +116,5 @@ class UserRegistrationForm(UserCreationForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Adiciona classes Bootstrap a campos que UserCreationForm cria automaticamente
         self.fields['password2'].widget.attrs['class'] = 'form-control'
         self.fields['password1'].widget.attrs['class'] = 'form-control'

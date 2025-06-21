@@ -5,11 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Pessoas - Minha Linhagem</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         .historia-pessoal-col {
             max-width: 300px;
             white-space: normal;
             word-wrap: break-word;
+        }
+        /* Ajuste para botões de ícone, se necessário */
+        .icon-btn {
+            padding: 0.25em 0.5em; /* Um pouco de padding */
+            font-size: 1.1em; /* Tamanho do ícone */
+            line-height: 1; /* Alinhamento vertical */
         }
     </style>
 </head>
@@ -17,7 +24,7 @@
     <div class="container mt-4">
         <h1 class="mb-4">Lista de Pessoas</h1>
         <a href="{% url 'cria_pessoa' %}" class="btn btn-primary mb-3">Adicionar Nova Pessoa</a>
-        <a href="{% url 'arvore_genealogica_default' %}" class="btn btn-info mb-3 ms-2">Ver Árvore Genealógica (Padrão)</a>
+        <a href="{% url 'arvore_genealogica_default' %}" class="btn btn-info mb-3 ms-2">Ver Minha Árvore</a>
 
         {% if messages %}
             <ul class="messages list-unstyled mt-3">
@@ -61,8 +68,19 @@
                             <td>{{ pessoa.mae.nome|default:"Não informado" }}</td>
                             <td class="historia-pessoal-col">{{ pessoa.historia_pessoal|default:"Sem história."|linebreaksbr }}</td>
                             <td>
-                                <a href="{% url 'edita_pessoa' pessoa.id %}" class="btn btn-sm btn-warning">Editar</a>
-                                <a href="{% url 'set_user_person' pessoa.id %}" class="btn btn-sm btn-success ms-1">Definir como Eu</a> {# NOVO BOTÃO #}
+                                <a href="{% url 'edita_pessoa' pessoa.id %}" class="btn btn-outline-warning btn-sm icon-btn" title="Editar"><i class="bi bi-pencil-square"></i></a>
+                                
+                                {# Botão de Excluir que abre o modal #}
+                                <button type="button" class="btn btn-outline-danger btn-sm icon-btn" 
+                                        data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" 
+                                        data-pessoa-id="{{ pessoa.id }}" data-pessoa-nome="{{ pessoa.nome }}"
+                                        title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                
+                                {% if not pessoa.is_user_selected %} 
+                                    <a href="{% url 'set_user_person' pessoa.id %}" class="btn btn-outline-success btn-sm icon-btn" title="Definir como Eu"><i class="bi bi-person-circle"></i></a>
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
@@ -75,6 +93,41 @@
         {% endif %}
     </div>
 
+    {# Modal de Confirmação de Exclusão #}
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza que deseja excluir <strong id="pessoaNomeModal"></strong>? Esta ação é irreversível.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <a id="confirmDeleteButton" href="#" class="btn btn-danger">Excluir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        // Script para passar os dados da pessoa para o modal antes de abrir
+        var confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Botão que acionou o modal
+            var pessoaId = button.getAttribute('data-pessoa-id');
+            var pessoaNome = button.getAttribute('data-pessoa-nome');
+            
+            var modalTitle = confirmDeleteModal.querySelector('.modal-title');
+            var pessoaNomeModal = confirmDeleteModal.querySelector('#pessoaNomeModal');
+            var confirmButton = confirmDeleteModal.querySelector('#confirmDeleteButton');
+
+            pessoaNomeModal.textContent = pessoaNome; // Define o nome da pessoa no corpo do modal
+            confirmButton.href = "{% url 'excluir_pessoa' 0 %}".replace('0', pessoaId); // Define a URL de exclusão
+        });
+    </script>
 </body>
 </html>
