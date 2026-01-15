@@ -7,7 +7,7 @@ from django.conf.urls.static import static
 
 # Importe suas ViewSets e APIViews DO NOVO ARQUIVO api_views.py
 from rest_framework.routers import DefaultRouter
-from pessoas.api_views import PessoaViewSet, CustomAuthToken, RegisterUserAPIView # <--- ATENÇÃO AQUI: pessoas.api_views
+from pessoas.api_views import PessoaViewSet, CustomAuthToken, RegisterUserAPIView
 
 # Crie um roteador para suas ViewSets
 router = DefaultRouter()
@@ -20,8 +20,8 @@ urlpatterns = [
 
     # URLs da API
     path('api/', include(router.urls)), # Inclui todas as URLs geradas pelo roteador
-    path('api/auth/', CustomAuthToken.as_view(), name='api_token_auth'), # Endpoint para login (receber token)
-    path('api/register/', RegisterUserAPIView.as_view(), name='api_register'), # Endpoint para registro
+    path('api/auth/', CustomAuthToken.as_view(), name='api_token_auth'),
+    path('api/register/', RegisterUserAPIView.as_view(), name='api_register'),
 ]
 
 # Apenas para servir arquivos de mídia (fotos) em ambiente de desenvolvimento

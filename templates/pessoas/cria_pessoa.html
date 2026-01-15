@@ -90,6 +90,21 @@
     </style>
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home_page' %}">Satilo</a>
+            <div class="d-flex">
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-secondary">Sair</button>
+                    </form>
+                {% else %}
+                    <a class="btn btn-outline-primary" href="{% url 'login' %}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
     <div class="container d-flex justify-content-center align-items-center min-vh-100">
         <div class="card shadow p-3" style="width: 100%; max-width: 600px;">
             <div class="card-body">
@@ -97,7 +112,6 @@
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
-                    {# --- DEBUG: Exibir erros não relacionados a campos específicos --- #}
                     {% if form.non_field_errors %}
                         <div class="alert alert-danger" role="alert">
                             <h5>Erro(s) no Formulário:</h5>
@@ -108,12 +122,8 @@
                             </ul>
                         </div>
                     {% endif %}
-                    {# --- FIM DEBUG --- #}
 
                     {% for field in form %}
-                        {# Renderiza o campo SOMENTE se não for 'user', 'owner' ou 'relacao' #}
-                        {# Note: 'user' e 'relacao' foram removidos do models.py, então não devem mais aparecer aqui. #}
-                        {# Mas mantive a condição para compatibilidade se você não fez as migrações ainda. #}
                         {% if field.name != 'user' and field.name != 'owner' and field.name != 'relacao' %}
                             <div class="mb-2">
                                 <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
@@ -144,18 +154,15 @@
                                 {% if field.help_text and field.name != 'estado_nascimento' %} 
                                     <div class="form-text">{{ field.help_text }}</div>
                                 {% endif %}
-                                {# --- DEBUG: Mensagens de erro de campo específicas --- #}
                                 {% for error in field.errors %}
                                     <div class="invalid-feedback d-block">
                                         <strong>ERRO:</strong> {{ error }}
                                     </div>
                                 {% endfor %}
-                                {# --- FIM DEBUG --- #}
                             </div>
-                        {% endif %} {# Fim do if para pular campos #}
+                        {% endif %}
                     {% endfor %}
 
-                    {# ==== Área de Preview ==== #}
                     <hr class="my-4">
                     <h4 class="text-center mb-3">Pré-visualização na Árvore</h4>
                     <div id="previewCard" class="preview-card">
@@ -167,7 +174,6 @@
                         <p id="preview-local-nascimento">Local Nasc.: Não Informado</p>
                         <p id="preview-estado-nascimento">Estado Nasc.: Não Informado</p> 
                     </div>
-                    {# ======================= #}
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
                         <button type="submit" class="btn btn-success me-md-2">Salvar</button>
@@ -180,7 +186,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
-        // Funções para calcular idade
         function calculateAge(dob, dod = null) {
             if (!dob) return 'N/A';
             const birthDate = new Date(dob);
@@ -194,7 +199,6 @@
             return age;
         }
 
-        // Função para formatar a data para dd/mm/aaaa
         function format_date(dateString) {
             if (!dateString) return '--/--/----';
             const date = new Date(dateString + 'T00:00:00');
@@ -204,7 +208,6 @@
             return `${day}/${month}/${year}`;
         }
 
-        // Referências aos elementos do formulário
         const nomeInput = document.getElementById('id_nome');
         const dataNascimentoInput = document.getElementById('id_data_nascimento');
         const dataFalecimentoInput = document.getElementById('id_data_falecimento');
@@ -213,7 +216,6 @@
         const estadoNascimentoInput = document.getElementById('id_estado_nascimento'); 
         const fotoInput = document.getElementById('id_foto');
 
-        // Referências aos elementos de preview
         const previewCard = document.getElementById('previewCard');
         const previewNome = document.getElementById('preview-nome');
         const previewDataNascimento = document.getElementById('preview-data-nascimento');
@@ -224,7 +226,6 @@
         const previewFoto = document.getElementById('preview-foto');
         const fileNameDisplay = document.getElementById('file-name-id_foto');
 
-        // Função para verificar se o preview tem conteúdo
         function hasPreviewContent() {
             return (nomeInput && nomeInput.value.trim() !== '') || 
                    (dataNascimentoInput && dataNascimentoInput.value.trim() !== '') || 
@@ -236,9 +237,7 @@
                    (previewFoto.src !== window.location.origin + "{% load static %}{% static 'pessoas/img/sem-foto.jpg' %}");
         }
 
-        // Função para atualizar o preview
         function updatePreview() {
-            console.log("DEBUG JS: Atualizando preview...");
             previewNome.textContent = (nomeInput && nomeInput.value) ? nomeInput.value : 'Nome da Pessoa';
             previewDataNascimento.textContent = `Nasc.: ${format_date((dataNascimentoInput && dataNascimentoInput.value) ? dataNascimentoInput.value : null)}`;
 
@@ -270,10 +269,8 @@
             } else {
                 previewCard.classList.remove('has-content');
             }
-            console.log("DEBUG JS: Preview atualizado.");
         }
 
-        // Event Listeners
         if (nomeInput) nomeInput.addEventListener('input', updatePreview);
         if (dataNascimentoInput) dataNascimentoInput.addEventListener('change', updatePreview);
         if (dataFalecimentoInput) dataFalecimentoInput.addEventListener('change', updatePreview);
@@ -282,10 +279,8 @@
         if (estadoNascimentoInput) estadoNascimentoInput.addEventListener('change', updatePreview);
 
 
-        // Listener para o preview da foto
         if (fotoInput) {
             fotoInput.addEventListener('change', function() {
-                console.log("DEBUG JS: Mudança na foto detectada.");
                 const file = this.files && this.files.length > 0 ? this.files[0] : null;
 
                 if (file) {
@@ -293,7 +288,6 @@
                     reader.onload = function(e) {
                         previewFoto.src = e.target.result;
                         previewFoto.classList.remove('placeholder-image');
-                        console.log("DEBUG JS: Foto carregada para preview.");
                     }
                     reader.readAsDataURL(file);
                     fileNameDisplay.textContent = file.name;
@@ -301,13 +295,11 @@
                     previewFoto.src = "{% load static %}{% static 'pessoas/img/sem-foto.jpg' %}";
                     previewFoto.classList.add('placeholder-image');
                     fileNameDisplay.textContent = 'Nenhum arquivo escolhido';
-                    console.log("DEBUG JS: Nenhuma foto selecionada, usando placeholder.");
                 }
                 updatePreview();
             });
 
             document.addEventListener('DOMContentLoaded', function() {
-                console.log("DEBUG JS: DOMContentLoaded - inicializando preview da foto.");
                 const initialPhotoUrl = "{% if form.foto.value %}{{ form.foto.value.url }}{% else %}{% load static %}{% static 'pessoas/img/sem-foto.jpg' %}{% endif %}";
                 previewFoto.src = initialPhotoUrl;
                 if (initialPhotoUrl === "{% load static %}{% static 'pessoas/img/sem-foto.jpg' %}") {
@@ -319,7 +311,6 @@
             });
         } else {
             document.addEventListener('DOMContentLoaded', function() {
-                console.log("DEBUG JS: DOMContentLoaded - fotoInput não encontrado, usando placeholder padrão.");
                 previewFoto.src = "{% load static %}{% static 'pessoas/img/sem-foto.jpg' %}";
                 previewFoto.classList.add('placeholder-image');
                 updatePreview();

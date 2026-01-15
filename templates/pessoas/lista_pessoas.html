@@ -12,7 +12,6 @@
             white-space: normal;
             word-wrap: break-word;
         }
-        /* Ajuste para botões de ícone, se necessário */
         .icon-btn {
             padding: 0.25em 0.5em; /* Um pouco de padding */
             font-size: 1.1em; /* Tamanho do ícone */
@@ -21,6 +20,21 @@
     </style>
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home_page' %}">Satilo</a>
+            <div class="d-flex">
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-secondary">Sair</button>
+                    </form>
+                {% else %}
+                    <a class="btn btn-outline-primary" href="{% url 'login' %}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
     <div class="container mt-4">
         <h1 class="mb-4">Lista de Pessoas</h1>
         <a href="{% url 'cria_pessoa' %}" class="btn btn-primary mb-3">Adicionar Nova Pessoa</a>
@@ -70,7 +84,6 @@
                             <td>
                                 <a href="{% url 'edita_pessoa' pessoa.id %}" class="btn btn-outline-warning btn-sm icon-btn" title="Editar"><i class="bi bi-pencil-square"></i></a>
                                 
-                                {# Botão de Excluir que abre o modal #}
                                 <button type="button" class="btn btn-outline-danger btn-sm icon-btn" 
                                         data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" 
                                         data-pessoa-id="{{ pessoa.id }}" data-pessoa-nome="{{ pessoa.nome }}"
@@ -93,7 +106,6 @@
         {% endif %}
     </div>
 
-    {# Modal de Confirmação de Exclusão #}
     <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -114,7 +126,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
-        // Script para passar os dados da pessoa para o modal antes de abrir
         var confirmDeleteModal = document.getElementById('confirmDeleteModal');
         confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
             var button = event.relatedTarget; // Botão que acionou o modal

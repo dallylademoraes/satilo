@@ -102,7 +102,12 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'arvore_genealogica_default' %}">Ver Árvore</a></li>
                     {% if user.is_authenticated %}
                         <li class="nav-item"><span class="nav-link">Olá, {{ user.username }}!</span></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Sair</a></li>
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-link btn btn-link p-0">Sair</button>
+                            </form>
+                        </li>
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Cadastro</a></li>
@@ -125,6 +130,33 @@
         <p class="text-muted">Conecte-se com suas raízes, descubra histórias e preserve o legado da sua família para as futuras gerações.</p>
     </div>
 
+    <div class="modal fade" id="demoNoticeModal" tabindex="-1" aria-labelledby="demoNoticeLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="demoNoticeLabel">Aviso importante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Este projeto está rodando sem banco de dados externo. Para acessar a demonstração, use:</p>
+                    <p><strong>Usuário:</strong> benjamim<br><strong>Senha:</strong> ben121314</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.addEventListener('load', function () {
+            const modalEl = document.getElementById('demoNoticeModal');
+            if (modalEl) {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
+        });
+    </script>
 </body>
 </html>
