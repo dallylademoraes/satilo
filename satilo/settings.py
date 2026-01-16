@@ -165,8 +165,20 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 AUTH_USER_MODEL = 'auth.User'
 # Media Files (Arquivos enviados pelo usuário, como fotos)
 # https://docs.djangoproject.com/en/5.2/topics/files/
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+SUPABASE_BUCKET = os.getenv('SUPABASE_BUCKET', 'media')
+
+if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
+    STORAGES = {
+        'default': {'BACKEND': 'pessoas.storage.SupabaseStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
+    supabase_base = SUPABASE_URL.rstrip('/')
+    MEDIA_URL = f"{supabase_base}/storage/v1/object/public/{SUPABASE_BUCKET}/"
+else:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
