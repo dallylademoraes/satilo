@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -19,7 +20,7 @@
             justify-content: center;
             position: relative;
             color: #fff;
-            background-image: url('{% load static %}{% static "pessoas/img/banner_placeholder.jpg" %}');
+            background-image: url("{% static 'pessoas/img/banner_placeholder.jpg' %}");
             background-size: cover;
             background-position: center;
         }
